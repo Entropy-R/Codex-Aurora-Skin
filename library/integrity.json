@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "files": {
+    "catalog.json": "1d52279f2b2907d2e89af7c948e7342e6671335e461beb7468f9d5c6604b7846",
+    "preset-red-white-abstract/theme.json": "1d2fbbd9323739e7720f9f17c96b7f617e3b596c21f0d976e9ceaed2fb8a109b",
+    "preset-red-white-abstract/background.png": "31bde93bb02d6723e0b6aa0ead675577604120acb0a6799163dd37f5cdd0a08e",
+    "preset-red-white-abstract/thumbnail.webp": "7be00c690610e3bb296d4f84764c1b8f4b7bff4b5b8fbbb61a00e7130c7076a0"
+  }
+}

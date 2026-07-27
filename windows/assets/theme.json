@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 2,
+  "id": "preset-red-white-abstract",
+  "name": "红白抽象",
+  "image": "red-white-abstract.png",
+  "appearance": "auto",
+  "art": {
+    "focusX": 0.72,
+    "focusY": 0.45,
+    "safeArea": "auto",
+    "taskMode": "auto"
+  },
+  "visual": {
+    "light": {
+      "brightness": 0.9,
+      "overlayOpacity": 0.32,
+      "surfaceOpacity": 0.65
+    },
+    "dark": {
+      "brightness": 0.62,
+      "overlayOpacity": 0.28,
+      "surfaceOpacity": 0.78
+    }
+  }
+}

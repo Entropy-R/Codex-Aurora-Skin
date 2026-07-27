@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Aurora Skin"
+  short_description: "Turn a personal image into a reversible macOS Codex theme"
+  default_prompt: "Use $codex-aurora-skin to install, customize, verify, or restore my macOS Codex theme without modifying the official app."
