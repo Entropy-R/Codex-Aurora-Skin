@@ -13,12 +13,24 @@ done
 
 discover_codex_app
 require_macos_runtime
+
+# 源码树把共享主题库和管理器放在仓库根目录，安装包则把它们放在引擎根目录。
+SHARED_ROOT="$PROJECT_ROOT"
+if [ ! -f "$SHARED_ROOT/library/catalog.json" ] ||
+   [ ! -f "$SHARED_ROOT/manager/server.mjs" ]; then
+  REPOSITORY_ROOT="$(cd "$PROJECT_ROOT/.." && pwd -P)"
+  if [ -f "$REPOSITORY_ROOT/library/catalog.json" ] &&
+     [ -f "$REPOSITORY_ROOT/manager/server.mjs" ]; then
+    SHARED_ROOT="$REPOSITORY_ROOT"
+  fi
+fi
+
 for required in \
   "$PROJECT_ROOT/assets/aurora-skin.css" \
   "$PROJECT_ROOT/assets/renderer-inject.js" \
   "$PROJECT_ROOT/assets/selectors.json" \
-  "$PROJECT_ROOT/library/catalog.json" \
-  "$PROJECT_ROOT/manager/server.mjs" \
+  "$SHARED_ROOT/library/catalog.json" \
+  "$SHARED_ROOT/manager/server.mjs" \
   "$PROJECT_ROOT/scripts/injector.mjs"; do
   [ -s "$required" ] || fail "Required project file is missing or empty: $required"
 done

@@ -9,13 +9,27 @@ Codex Aurora Skin 是面向 Windows 与 macOS 的非官方 Codex 桌面主题管
 ## 下载
 
 从 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases)
-下载 Windows 公开安装包：
+下载对应平台的公开安装包：
 
 - Windows：`CodexAuroraSkin-Setup-v*.exe`
+- macOS：`CodexAuroraSkin-v*.dmg`
 - 校验文件：`SHA256SUMS.txt`
 
-公开构件目前未签名。macOS 源码与测试仍保留，但 v1.0.0 不生成或发布 DMG。
+公开构件目前未使用商业代码签名。macOS App 使用 ad-hoc 签名且未经 Apple
+公证，首次打开时需要在“系统设置 → 隐私与安全性”中确认“仍要打开”。
 产品只在用户手动启动时运行，不创建登录启动项，也不会联网检查更新。
+
+### macOS 首次使用
+
+1. 打开下载的 DMG，将 “Codex Aurora Skin” 拖入“应用程序”。
+2. 尝试启动一次；如果 macOS 阻止运行，打开“系统设置 → 隐私与安全性”，
+   确认下载文件的 SHA-256 与 Release 一致后选择“仍要打开”。
+3. 再次启动 App，本地主题管理器会在浏览器中打开。
+4. 选择主题并点击应用；首次启用时按提示允许 Codex 重启。
+5. 需要退出主题会话时，在管理器中选择“恢复官方外观”。
+
+详细步骤和数据目录见 [macOS 安装说明](./docs/install-macos.md)。安全提示参考
+[Apple 官方说明](https://support.apple.com/zh-cn/102445)。
 
 ## 主题管理器
 
