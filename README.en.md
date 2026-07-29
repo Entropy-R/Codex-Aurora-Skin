@@ -71,3 +71,10 @@ follow the official Codex light/dark appearance.
 
 See the [Windows](./docs/install-windows.md) and
 [macOS](./docs/install-macos.md) installation guides.
+
+## Development roadmap
+
+Bug fixes, optimizations, and new development work for Windows, macOS, and
+shared modules are maintained in the unified
+[development roadmap](./docs/ROADMAP.md). Its priorities, target versions, and
+acceptance criteria define the follow-up work.

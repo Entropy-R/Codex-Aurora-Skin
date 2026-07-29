@@ -80,3 +80,9 @@ swift test --package-path macos/menubar-app
 
 详细安装说明见
 [Windows](./docs/install-windows.md) 与 [macOS](./docs/install-macos.md)。
+
+## 开发路线图
+
+Windows、macOS 和共用模块的 BUG 修复、优化与新增开发项统一维护在
+[开发路线图](./docs/ROADMAP.md)。后续工作以其中的优先级、目标版本和验收标准
+为依据。
