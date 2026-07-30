@@ -10,7 +10,9 @@ Thanks for contributing to Codex Aurora Skin. The project loads external themes 
 
 1. Read the [project README](../README.en.md) and [platform reference](../docs/platforms.md). macOS usage is documented in [`macos/README.md`](../macos/README.md), while Windows implementation constraints live in [`windows/SKILL.md`](../windows/SKILL.md).
 2. Search the [existing issues](https://github.com/Entropy-R/Codex-Aurora-Skin/issues) and [open pull requests](https://github.com/Entropy-R/Codex-Aurora-Skin/pulls). If an active change already touches the same files, add to that discussion or split out a smaller change with no overlap.
-3. Create a branch from the latest upstream `main`. Keep each pull request focused on one problem. Do not mix a new theme, a runtime fix, and unrelated cleanup.
+3. Read the [development workflow](../docs/DEVELOPMENT_WORKFLOW.md). Create a release
+   integration branch first, then create one issue branch from it for each bug,
+   optimization, or feature. Keep each pull request focused on one problem.
 
 ## Filing an issue
 
@@ -27,7 +29,10 @@ A feature request should explain the use case, expected behavior, alternatives c
 
 ## Development and verification
 
-Fork the repository and base your branch on the latest upstream `main`. Reuse existing scripts and platform helpers where possible. A small change should not require a new dependency.
+Fork the repository. Base a new release integration branch on the latest upstream
+`main`, and base issue branches on the active release integration branch. Continue
+the same remote branch when moving between computers; do not create per-computer or
+per-platform copies. Reuse existing scripts and platform helpers where possible.
 
 ### macOS
 
@@ -61,6 +66,12 @@ Review every new or changed link and command, then run:
 
 ```bash
 git diff --check
+```
+
+When shared assets or version fields change, also run:
+
+```bash
+node tools/check-project-consistency.mjs
 ```
 
 ## Change constraints

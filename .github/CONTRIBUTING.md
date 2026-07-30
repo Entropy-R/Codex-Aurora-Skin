@@ -10,7 +10,8 @@
 
 1. 阅读[项目 README](../README.md)和[平台对照](../docs/platforms.md)。macOS 的使用说明在 [`macos/README.md`](../macos/README.md)，Windows 的实现约束在 [`windows/SKILL.md`](../windows/SKILL.md)。
 2. 搜索[现有 Issue](https://github.com/Entropy-R/Codex-Aurora-Skin/issues)和[开放 PR](https://github.com/Entropy-R/Codex-Aurora-Skin/pulls)。相同文件已有活跃改动时，优先补充原讨论，或把新方案拆成不重叠的小改动。
-3. 从最新的上游 `main` 创建分支。一个 PR 只解决一个问题，不要把新主题、运行时修复和无关整理混在一起。
+3. 阅读[开发与分支流程](../docs/DEVELOPMENT_WORKFLOW.md)。新版本先建立版本集成分支；
+   BUG、优化和新增开发分别从该分支建立单问题分支。一个 PR 只解决一个问题。
 
 ## 提交 Issue
 
@@ -27,7 +28,9 @@ Bug 报告应包含：
 
 ## 开发与验证
 
-请先 fork 仓库，并让分支基于最新的上游 `main`。尽量复用现有脚本和平台 helper，不要为小改动增加新依赖。
+请先 fork 仓库。新版本集成分支基于最新的上游 `main`，单问题分支基于当前版本
+集成分支；换设备继续工作时使用同一个远程分支，不创建按电脑或平台命名的副本。
+尽量复用现有脚本和平台 helper，不要为小改动增加新依赖。
 
 ### macOS
 
@@ -61,6 +64,12 @@ powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File .\windows\tests\ru
 
 ```bash
 git diff --check
+```
+
+共用资源或版本字段发生变化时还应运行：
+
+```bash
+node tools/check-project-consistency.mjs
 ```
 
 ## 改动约束

@@ -28,6 +28,8 @@
 - 紧急安全修复可以先处置，但必须在同一提交或 PR 中补录。
 - macOS 启动、恢复和验收命令不得再由 `launchctl submit` 包装；该机制会把
   一次性脚本注册为受管任务，脚本退出后可能再次执行并造成 Codex 重启循环。
+- 分支职责、跨设备接续和单问题 PR 规则统一遵循
+  [`DEVELOPMENT_WORKFLOW.md`](./DEVELOPMENT_WORKFLOW.md)。
 
 ## 版本里程碑
 
@@ -131,3 +133,19 @@
 
 `BUG-ALL-001` 与 `OPT-ALL-001` 的共用实现和 macOS 验收已完成，状态保持
 “进行中”，待 Windows PowerShell、安装包和实机回归通过后再归档。
+
+## v1.0.1 Windows 接续门禁
+
+Windows 电脑直接检出 `codex/v1.0.1-fixes`，不要另建平台副本。开始前运行
+`node tools/check-project-consistency.mjs`，然后完成：
+
+- Windows PowerShell 5.1 与 PowerShell 7 回归测试；
+- 安装器静态测试和 `CodexAuroraSkin-Setup-v1.0.1.exe` 构建；
+- 普通新建任务、项目内新建任务、已有任务三类页面实机布局验证；
+- 管理器断线、HTTP 错误和业务错误的分类验证；
+- 安装、应用主题、实时验证、恢复官方外观和残留进程检查。
+
+回填证据至少包括 Windows 版本、Codex 版本、测试命令与结果、Setup.exe 大小和
+SHA-256、无私人内容的截图路径，以及恢复后注入器/CDP 状态。若验收发现新的
+Windows 缺陷，先登记 `BUG-WIN`、`OPT-WIN` 或 `DEV-WIN` 编号，再从版本集成
+分支创建单问题分支。

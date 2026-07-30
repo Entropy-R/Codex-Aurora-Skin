@@ -77,4 +77,6 @@ See the [Windows](./docs/install-windows.md) and
 Bug fixes, optimizations, and new development work for Windows, macOS, and
 shared modules are maintained in the unified
 [development roadmap](./docs/ROADMAP.md). Its priorities, target versions, and
-acceptance criteria define the follow-up work.
+acceptance criteria define the follow-up work. Cross-device handoff and release
+integration branch rules are documented in the
+[development workflow](./docs/DEVELOPMENT_WORKFLOW.md).
