@@ -112,6 +112,8 @@
 
 ### v1.0.1 macOS 稳定性
 
+- 实现提交：`4a8c0cc`；评审入口：Draft PR
+  [#2](https://github.com/Entropy-R/Codex-Aurora-Skin/pull/2)。
 - `BUG-MAC-001`：新增可测试的心跳租约。管理器进程暂停 17 秒再恢复后，原 PID、
   令牌和 `/api/ping` 均保持有效；正常无心跳超时的单元测试通过。
 - `BUG-MAC-002`：自动 CDP 恢复增加 45 秒宽限和单次最终提示，显式应用操作仍
