@@ -42,7 +42,8 @@
 
 | 编号 | 平台 | 优先级 | 状态 | 目标版本 | 摘要 |
 | --- | --- | --- | --- | --- | --- |
-| `BUG-ALL-001` | 共用 | P1 | 进行中 | `v1.0.1` 候选 | 旧主页结构规则将新建对话输入框推到视口外 |
+| `BUG-ALL-001` | 共用 | P1 | 已完成 | `v1.0.1` 候选 | 旧主页结构规则将新建对话输入框推到视口外 |
+| `BUG-WIN-001` | Windows | P1 | 已完成 | `v1.0.1` 候选 | 安装版实时验证脚本未加载主题路径 helper |
 | `BUG-MAC-001` | macOS | P1 | 已完成 | `v1.0.1` 候选 | 休眠超过心跳超时后，管理器在唤醒时退出 |
 | `BUG-MAC-002` | macOS | P1 | 已完成 | `v1.0.1` 候选 | CDP 重连期间过早报告“未通过显示校验” |
 
@@ -63,6 +64,22 @@
   - 关键选择器缺失时页面保持可操作，不隐藏或裁切原生控件；
   - 增加两种新建对话页及普通对话页的 DOM 回归样例；
   - 同步共用运行时资源，并分别完成 Windows、macOS 回归验证。
+
+### BUG-WIN-001：安装版实时验证缺少主题 helper
+
+- 证据：Windows v1.0.1 安装器成功安装并启动主题会话后，
+  `verify-aurora-skin.ps1` 稳定报错
+  `Get-AuroraSkinThemePaths` 未识别。该函数定义在 `theme-windows.ps1`，
+  验证入口只加载了 `common-windows.ps1`。
+- 影响：主题注入器和已验证 CDP 会话能够启动，但安装版无法完成实时显示校验
+  和验收截图，阻断 Windows v1.0.1 门禁。
+- 解决方向：验证入口显式加载 `theme-windows.ps1`，并增加静态回归断言，
+  防止打包后的独立入口再次遗漏依赖。
+- 验收标准：
+  - PowerShell 5.1 与 PowerShell 7 回归测试通过；
+  - 安装器静态测试通过；
+  - 安装版实时验证能够读取活动主题目录并返回成功；
+  - 普通新建、项目内新建和已有任务页面可分别完成实时验证与截图。
 
 ### BUG-MAC-001：休眠后管理器退出
 
@@ -94,7 +111,7 @@
 
 | 编号 | 平台 | 优先级 | 状态 | 目标版本 | 摘要 |
 | --- | --- | --- | --- | --- | --- |
-| `OPT-ALL-001` | 共用 | P2 | 进行中 | `v1.0.1` 候选 | 将网络断开错误改为可操作的本地化提示 |
+| `OPT-ALL-001` | 共用 | P2 | 已完成 | `v1.0.1` 候选 | 将网络断开错误改为可操作的本地化提示 |
 
 ### OPT-ALL-001：管理器断线提示
 
@@ -131,21 +148,50 @@
   运行。验收过程曾因错误地用 `launchctl submit` 包装恢复脚本造成重启循环；
   该包装不属于产品代码，并已加入上方执行禁令。
 
-`BUG-ALL-001` 与 `OPT-ALL-001` 的共用实现和 macOS 验收已完成，状态保持
-“进行中”，待 Windows PowerShell、安装包和实机回归通过后再归档。
+### v1.0.1 Windows 验收
 
-## v1.0.1 Windows 接续门禁
+- 环境：Windows 10 Pro 22H2（build `19045.6466`），Codex
+  `26.721.11231.0`（Microsoft Store 签名），Windows PowerShell
+  `5.1.19041.6456`，PowerShell `7.6.4`，Node.js `24.15.0`。
+- 自动化门禁全部通过：
+  - `node tools/check-project-consistency.mjs`；
+  - `node tools/sync-runtime-assets.mjs --check`；
+  - `node --test manager/*.test.mjs`（14/14）；
+  - `node --test manager/web/*.test.mjs`（3/3）；
+  - `powershell.exe -NoProfile -ExecutionPolicy RemoteSigned -File
+    .\windows\tests\run-tests.ps1`；
+  - `pwsh.exe -NoProfile -ExecutionPolicy RemoteSigned -File
+    .\windows\tests\run-tests.ps1`；
+  - Windows PowerShell 5.1 与 PowerShell 7 分别运行
+    `.\windows\tests\installer-static.tests.ps1`。
+- 安装包：
+  `release/CodexAuroraSkin-Setup-v1.0.1.exe`，大小 `25,300,317` 字节，
+  文件版本 `1.0.1.0`，产品版本 `1.0.1`，SHA-256
+  `72FC34BC0397CFC5E04EA6BF98402F25003420B7523EA6EBC0C41EA265C357B3`；
+  `.sha256` 边车文件一致，安装内容完整且不含测试文件。
+- 安装升级前后用户配置哈希和 7 个用户主题均保持不变；安装后应用程序、引擎
+  版本均为 `1.0.1`，捆绑 Node.js 为 `22.23.1`。
+- `BUG-WIN-001` 修复后，安装版实时验证脚本成功读取活动主题并返回
+  `pass=true`。普通新建任务输入框为 `y=1113–1211`、宽 `1148px`；项目内
+  新建任务和已有任务输入框均为 `y=1113–1211`、宽 `736px`，完整位于
+  `2000×1227` 视口内，页面无横向或纵向溢出。背景、侧栏、输入区和页面宽度
+  目视正常，隐私安全裁剪证据：
+  - [`normal-new-task-composer.png`](./qa/windows-v1.0.1/normal-new-task-composer.png)；
+  - [`project-new-task-composer.png`](./qa/windows-v1.0.1/project-new-task-composer.png)；
+  - [`existing-task-composer.png`](./qa/windows-v1.0.1/existing-task-composer.png)。
+- 管理器刷新后报告主题会话活动，真实主题应用返回
+  `ok=true, applied=true, pending=false`。停止管理器后，已打开页面准确显示
+  “管理器连接已断开，请重新打开 Codex Aurora Skin。”，证据：
+  [`manager-disconnected-message.png`](./qa/windows-v1.0.1/manager-disconnected-message.png)。
+  不存在接口保留 404“接口不存在”，不存在主题保留 400 原始业务错误，均未
+  误报为连接断开。
+- 使用安装版 `restore-aurora-skin.ps1 -ForceRestart` 恢复后，
+  `state.json` 不存在、注入器数量为 0、9336 端口未监听、Codex 进程不含
+  `remote-debugging-port=9336`，官方 Store 版本正常启动。恢复未启用
+  `RestoreBaseTheme` 或 `RecoverConfigBackup`，未进入配置写入分支；当前配置
+  与安装前备份均不存在 API Key/Base URL 字段。WindowsApps、`app.asar` 和
+  Codex 官方文件未被修改。
 
-Windows 电脑直接检出 `codex/v1.0.1-fixes`，不要另建平台副本。开始前运行
-`node tools/check-project-consistency.mjs`，然后完成：
-
-- Windows PowerShell 5.1 与 PowerShell 7 回归测试；
-- 安装器静态测试和 `CodexAuroraSkin-Setup-v1.0.1.exe` 构建；
-- 普通新建任务、项目内新建任务、已有任务三类页面实机布局验证；
-- 管理器断线、HTTP 错误和业务错误的分类验证；
-- 安装、应用主题、实时验证、恢复官方外观和残留进程检查。
-
-回填证据至少包括 Windows 版本、Codex 版本、测试命令与结果、Setup.exe 大小和
-SHA-256、无私人内容的截图路径，以及恢复后注入器/CDP 状态。若验收发现新的
-Windows 缺陷，先登记 `BUG-WIN`、`OPT-WIN` 或 `DEV-WIN` 编号，再从版本集成
-分支创建单问题分支。
+`BUG-ALL-001`、`OPT-ALL-001` 已完成 Windows 与 macOS 双平台验收；
+`BUG-WIN-001` 已完成修复和 Windows 回归。v1.0.1 仍为候选版本，本次不创建
+标签、不发布 Release。
