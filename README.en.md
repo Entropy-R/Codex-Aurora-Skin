@@ -1,58 +1,144 @@
+<div align="center">
+
 # Codex Aurora Skin
 
-Codex Aurora Skin is an unofficial theme manager for the Codex desktop app on
-Windows and macOS. It injects background styling through a loopback-only CDP
-session. It does not modify the Codex application, account data, model
-configuration, plugins, or tasks.
+Managed, reversible, immersive background themes for the Codex desktop app.
 
-> This project is not affiliated with, sponsored by, or endorsed by OpenAI.
+[简体中文](./README.md) ·
+[Download](https://github.com/Entropy-R/Codex-Aurora-Skin/releases) ·
+[Windows guide](./docs/install-windows.md) ·
+[Project documentation](./docs/PROJECT.md)
 
-## Downloads
+</div>
 
-Download the public Windows package from
-[GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases):
+![Codex Aurora Skin with a snowy background](./docs/images/screenshot-windows-snow-public.png)
 
-- Windows: `CodexAuroraSkin-Setup-v*.exe`
-- Checksums: `SHA256SUMS.txt`
+> [!IMPORTANT]
+> This is an unofficial community project. It is not affiliated with,
+> sponsored by, or endorsed by OpenAI. It does not modify the official Codex
+> installation, account data, model configuration, plugins, or tasks.
 
-The artifact is currently unsigned. macOS source and tests remain available,
-but v1.0.0 does not build or publish a DMG. The product starts only when
-requested, does not create a login item, and does not check for updates online.
+## Overview
 
-## Theme manager
+Codex Aurora Skin is a local theme manager for the Codex desktop app. It
+injects background styles through a loopback-only CDP session, blending the
+main view, task pages, and composer with a user-selected image while preserving
+the official interface and its light/dark appearance.
 
-The local Simplified Chinese manager provides:
+- Import PNG, JPEG, and WebP images locally.
+- Tune brightness, background dimming, and surface strength independently for
+  light and dark appearances.
+- Browse, apply, rename, and delete user themes.
+- Keep built-in themes read-only and preserve user themes across upgrades and
+  default uninstall.
+- Restore the official appearance and close the CDP session at any time.
+- Create no login item and perform no online update checks.
 
-- separate built-in and user theme libraries;
-- independent light/dark brightness, background dimming, and surface-strength controls;
-- local PNG, JPEG, and WebP imports with browser-generated thumbnails;
-- apply, rename, and delete operations for user themes;
-- explicit confirmation before restarting Codex for a CDP session;
-- complete restoration of the official appearance.
+## Screenshots
 
-The offline catalog contains the original Red & White Abstract preset.
-Built-in themes are read-only. User themes and overrides remain in the
-platform state directory across upgrades and default uninstall.
+### Codex desktop
 
-Brightness ranges from `0.35` to `1.20`. In dark mode, background dimming ranges
-from `0` to `0.70` and surface strength from `0.20` to `1.00`; light mode uses
-safe minimums of `0.32` and `0.60` respectively for text contrast. Image controls affect
-only the background layer, while surface strength changes panel translucency
-without filtering text or icons. Themes always use `appearance: auto` and
-follow the official Codex light/dark appearance.
+The hero image above shows the theme running in the Codex main view. The theme
+affects the background layer and interface surfaces without applying image
+filters to text, buttons, icons, or native controls.
+
+### Local theme manager
+
+The manager keeps built-in and imported themes together and stores separate
+controls for the light and dark appearances.
+
+![Codex Aurora Skin theme manager](./docs/images/screenshot-theme-manager.png)
+
+> User-imported images shown in these screenshots are examples only. They are
+> not included in the repository or installer.
+
+## Platform and release status
+
+| Platform | Status | Distribution |
+| --- | --- | --- |
+| Windows 10/11 | Released | Download `CodexAuroraSkin-Setup-v*.exe` from Releases |
+| macOS | Source and tests retained | v1.0.0 does not build or publish a DMG |
+
+Public artifacts do not currently use commercial code signing. Verify the
+installer against the `SHA256SUMS.txt` file included with its GitHub Release.
+
+## Quick start
+
+1. Download the Windows installer and checksum file from
+   [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases).
+2. Verify the installer's SHA-256, then run it.
+3. Launch **Codex Aurora Skin**. The local-only theme manager opens in your
+   browser.
+4. Select a built-in theme or import an image, adjust its controls, and choose
+   **Apply theme**.
+5. Choose **Restore official appearance** when you want to end the themed
+   session.
+
+See the [Windows installation guide](./docs/install-windows.md) for complete
+steps, state directories, and uninstall behavior.
+
+## Theme controls
+
+| Control | Dark appearance | Light appearance | Effect |
+| --- | --- | --- | --- |
+| Image brightness | `0.35–1.20` | `0.35–1.20` | Background image only |
+| Background dimming | `0–0.70` | `0.32–0.70` | Maintains foreground contrast |
+| Surface strength | `0.20–1.00` | `0.60–1.00` | Changes panel translucency |
+
+Themes always use `appearance: auto` and follow the official Codex light or
+dark appearance.
 
 ## Security boundary
 
 - The manager binds only to `127.0.0.1` on an ephemeral port.
 - Each launch creates a random 256-bit token and validates Host, Origin, and
   Bearer authentication.
-- Strict CSP and `Referrer-Policy: no-referrer` are enabled.
-- Imports are limited to 16 MB, 16384px per side, and 50 megapixels.
+- The page enables a strict CSP and `Referrer-Policy: no-referrer`.
+- Imports are limited to 16 MB, 16384 px per side, and 50 megapixels.
 - Theme and override updates use staging and atomic replacement.
-- The manager exits after 120 seconds without an authenticated client; the
-  independent injector keeps the current theme active.
+- The manager exits after 120 seconds without an authenticated client.
 - Restore stops the injector, closes the CDP session, and relaunches Codex
   normally.
 
-See the [Windows](./docs/install-windows.md) and
-[macOS](./docs/install-macos.md) installation guides.
+## Development and verification
+
+Repository layout:
+
+```text
+manager/   Local theme service and web interface
+runtime/   Shared styles and renderer injection
+windows/   Windows installation, launch, restore, and tests
+macos/     macOS source, scripts, and tests
+library/   Offline built-in theme catalog
+docs/      Installation and project documentation
+tools/     Consistency checks and development utilities
+```
+
+Windows and shared modules:
+
+```powershell
+node --test manager/*.test.mjs
+pwsh -NoProfile -File windows/tests/run-tests.ps1
+pwsh -NoProfile -File windows/tests/installer-static.tests.ps1
+node tools/sync-runtime-assets.mjs --check
+```
+
+The macOS build and regression suite must run on macOS:
+
+```bash
+./macos/tests/run-tests.sh
+swift test --package-path macos/menubar-app
+./macos/scripts/build-dmg.sh --skip-tests
+```
+
+Further reading:
+
+- [Project design](./docs/PROJECT.md)
+- [Windows installation](./docs/install-windows.md)
+- [macOS installation](./docs/install-macos.md)
+- [Platform differences](./docs/platforms.md)
+
+## License
+
+Code is released under the [MIT License](./LICENSE). See [NOTICE](./NOTICE.md)
+for third-party notices.
