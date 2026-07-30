@@ -37,7 +37,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.0";
+const SKIN_VERSION = "1.0.1";
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const CDP_ID_PATTERN = /^[A-Za-z0-9._-]{1,200}$/;
 const MAX_ART_BYTES = 16 * 1024 * 1024;
@@ -45,6 +45,7 @@ const OPERATION_UI_HOST_ID = "chatgpt-aurora-skin-operation";
 const OPERATION_UI_REGISTRY_KEY = "__CHATGPT_AURORA_SKIN_OPERATION_UI__";
 const OPERATION_KINDS = new Set(["apply", "pause", "switch"]);
 const OPERATION_UI_STATES = new Set(["success", "error", "cancelled"]);
+const AUTOMATIC_RECOVERY_GRACE_MS = 45_000;
 const OPERATION_UI_CSS = `
   :host {
     all: initial;
@@ -988,8 +989,10 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
       (!expectedRevision || result.revision === expectedRevision);
     // Project selector markup varies across Codex builds — soft requirement.
     const homePass = !result.homeRoute || (
-      result.homePresent && result.hero?.visible && result.hero.width >= 280 &&
-      result.hero.height >= 120 && (result.visibleCardCount === 0 || (
+      result.homePresent && result.composer?.visible &&
+      result.composer.y >= 0 &&
+      result.composer.y + result.composer.height <= result.viewport.height + 1 &&
+      (result.visibleCardCount === 0 || (
         visibleSuggestionLabels.length >= result.visibleCardCount &&
         result.suggestionLabelColorsMatch
       ))
@@ -999,7 +1002,8 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
     result.expectedRevision = expectedRevision;
     result.softNotes = {
       projectButtonOptional: !result.projectButton?.visible,
-      composerOptionalOnNonTaskRoutes: !result.composer?.visible,
+      heroOptional: result.homeRoute && !result.hero?.visible,
+      composerOptionalOnNonTaskRoutes: !result.homeRoute && !result.composer?.visible,
       suggestionCardsOptional: result.homeRoute && result.visibleCardCount === 0,
     };
     return result;
@@ -1370,6 +1374,7 @@ async function runWatch(options) {
   let pauseRecovery = null;
   let controlOnly = false;
   let mutationEpoch = 0;
+  let automaticRecovery = null;
   let activeTargetSetups = 0;
   const targetSetupWaiters = new Set();
   let wakeControlWait = null;
@@ -1704,6 +1709,14 @@ async function runWatch(options) {
               record.session, "hide", record.operationToken, "loading", "",
             );
           }
+          if (record.verified && !activeOperation && !controlOnly) {
+            automaticRecovery ??= {
+              startedAt: Date.now(),
+              token: nextOperationToken(),
+              loadingShown: false,
+              failureNotified: false,
+            };
+          }
           record.session.close();
           sessions.delete(id);
         }
@@ -1728,6 +1741,7 @@ async function runWatch(options) {
             needsLoadFallback: false,
             operationToken: null,
             operationExternal: false,
+            verified: false,
           };
           connectionEpoch = mutationEpoch;
           sessions.set(target.id, record);
@@ -1778,18 +1792,28 @@ async function runWatch(options) {
           }
           record.operationToken = initialOperation?.token
             ?? recoveryOperation?.token
+            ?? automaticRecovery?.token
             ?? nextOperationToken();
           record.operationExternal = Boolean(initialOperation || recoveryOperation);
-          await presentOperationUi(
-            session,
-            record.operationToken,
-            "loading",
-            initialOperation
-              ? operationKindMessage(initialOperation.status === "pausing" ? "pause" : "apply")
-              : recoveryOperation
-                ? "暂停未完成，正在恢复原皮肤…"
-              : `正在应用「${current.theme.name}」…`,
-          );
+          const shouldPresentLoading = !automaticRecovery || !automaticRecovery.loadingShown ||
+            Boolean(initialOperation || recoveryOperation);
+          if (shouldPresentLoading) {
+            await presentOperationUi(
+              session,
+              record.operationToken,
+              "loading",
+              initialOperation
+                ? operationKindMessage(initialOperation.status === "pausing" ? "pause" : "apply")
+                : recoveryOperation
+                  ? "暂停未完成，正在恢复原皮肤…"
+                  : automaticRecovery
+                    ? "正在恢复皮肤连接…"
+                    : `正在应用「${current.theme.name}」…`,
+            );
+            if (automaticRecovery && !initialOperation && !recoveryOperation) {
+              automaticRecovery.loadingShown = true;
+            }
+          }
           if (controlOnly || pausing) {
             continue;
           }
@@ -1817,6 +1841,8 @@ async function runWatch(options) {
             current.revision,
           );
           if (!verification?.pass) throw new Error("Initial theme verification failed");
+          record.verified = true;
+          if (record.operationExternal && automaticRecovery) automaticRecovery = null;
           if (recoveryOperation && !activeOperation
             && pauseRecovery?.token === recoveryOperation.token) {
             await presentOperationUi(
@@ -1827,6 +1853,11 @@ async function runWatch(options) {
               1000,
             );
             recoveredPauseThisCycle = true;
+          } else if (automaticRecovery && !record.operationExternal) {
+            await presentOperationUi(
+              session, automaticRecovery.token, "success", "皮肤连接已恢复",
+            );
+            automaticRecovery = null;
           } else if (!record.operationExternal) {
             await presentOperationUi(
               session, record.operationToken, "success", `已应用「${current.theme.name}」`,
@@ -1846,6 +1877,17 @@ async function runWatch(options) {
                 "暂停失败，原皮肤恢复未确认",
                 1000,
               );
+            } else if (automaticRecovery && !record.operationExternal) {
+              if (Date.now() - automaticRecovery.startedAt >= AUTOMATIC_RECOVERY_GRACE_MS &&
+                !automaticRecovery.failureNotified) {
+                automaticRecovery.failureNotified = true;
+                await presentOperationUi(
+                  session,
+                  automaticRecovery.token,
+                  "error",
+                  "皮肤连接恢复失败，请重新应用主题",
+                );
+              }
             } else if (!record.operationExternal) {
               await presentOperationUi(
                 session, record.operationToken, "error", "应用失败，未通过显示校验",

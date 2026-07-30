@@ -253,6 +253,10 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.match(css, /\[data-dream-search-band="true"\]/);
   assert.match(css, /\[data-dream-search-input="true"\]/);
   assert.match(css, /\[data-dream-project-host="true"\]/);
+  assert.doesNotMatch(css, /flex:\s*0 0 440px|min-height:\s*440px|flex-basis:\s*408px|min-height:\s*408px/,
+    "主页布局不得用固定高度把原生输入框推到视口之外。");
+  assert.doesNotMatch(css, /__DREAM_SELECTOR_HOME_ROUTE_CSS__\s*>\s*div/,
+    "主页结构会随 Codex 升级变化，皮肤不得按直接子节点层级重排原生输入区。");
   assert.match(css, /filter:\s*brightness\(var\(--ds-art-brightness\)\)/);
   assert.doesNotMatch(css, /body\s*\{[^}]*filter:\s*brightness/s,
     "Background brightness must never filter the native app body and controls.");

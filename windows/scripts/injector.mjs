@@ -33,7 +33,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.0";
+const SKIN_VERSION = "1.0.1";
 const MAX_ART_BYTES = 16 * 1024 * 1024;
 const STRONG_THEME_AUDIT_MS = 30000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
@@ -1053,7 +1053,9 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
     result.pass = result.installed && result.version === result.expectedVersion &&
       result.stylePresent && result.businessClassPollution === 0 && structurePass &&
       payloadPass &&
-      (!result.homePresent || (Boolean(result.hero) &&
+      (!result.homePresent || (Boolean(result.composer) &&
+        result.composer.y >= 0 &&
+        result.composer.y + result.composer.height <= result.viewport.height + 1 &&
         (!result.suggestionsPresent || (result.cards.length >= 2 && result.cards.length <= 4))));
     return result;
   })()`);

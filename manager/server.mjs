@@ -9,6 +9,7 @@ import { execFile, spawn } from "node:child_process";
 import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { ThemeStore, VISUAL_LIMITS } from "./theme-store.mjs";
+import { HeartbeatLease } from "./heartbeat-lease.mjs";
 
 const execFileAsync = promisify(execFile);
 const here = path.dirname(fileURLToPath(import.meta.url));
@@ -16,6 +17,8 @@ const webRoot = path.join(here, "web");
 const MAX_JSON_BYTES = 64 * 1024;
 const MAX_IMPORT_BYTES = 18 * 1024 * 1024;
 const HEARTBEAT_TIMEOUT_MS = 120_000;
+const HEARTBEAT_SUSPEND_GAP_MS = 15_000;
+const ACTIVE_VERIFY_TIMEOUT_MS = 45_000;
 
 function parseArgs(argv) {
   const options = {
@@ -58,7 +61,10 @@ function parseArgs(argv) {
 const options = parseArgs(process.argv.slice(2));
 const token = randomBytes(32).toString("hex");
 const sessionPath = path.join(options.stateRoot, "manager-session.json");
-let lastHeartbeatAt = Date.now();
+const heartbeatLease = new HeartbeatLease({
+  timeoutMs: HEARTBEAT_TIMEOUT_MS,
+  suspendGapMs: HEARTBEAT_SUSPEND_GAP_MS,
+});
 let shuttingDown = false;
 let server;
 
@@ -223,7 +229,8 @@ async function verifyActive() {
   ];
   if (options.platform === "windows") baseArgs.push("--browser-id", String(state.browserId || ""));
   let lastError = null;
-  for (let attempt = 0; attempt < 5; attempt += 1) {
+  const deadline = Date.now() + ACTIVE_VERIFY_TIMEOUT_MS;
+  while (Date.now() < deadline) {
     try {
       await execFileAsync(options.nodePath, baseArgs, {
         timeout: 10_000,
@@ -233,7 +240,9 @@ async function verifyActive() {
       return { applied: true, pending: false };
     } catch (error) {
       lastError = error;
-      await new Promise((resolve) => setTimeout(resolve, 1200));
+      if (Date.now() < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+      }
     }
   }
   throw new Error(`主题热更新校验失败：${lastError?.stderr || lastError?.message || "未知错误"}`);
@@ -270,11 +279,11 @@ async function routeApi(request, response, url) {
     return sendJson(response, 200, { ok: true, pid: process.pid });
   }
   if (request.method === "POST" && url.pathname === "/api/heartbeat") {
-    lastHeartbeatAt = Date.now();
+    heartbeatLease.heartbeat();
     return sendJson(response, 200, { ok: true });
   }
   if (request.method === "GET" && url.pathname === "/api/bootstrap") {
-    lastHeartbeatAt = Date.now();
+    heartbeatLease.heartbeat();
     return sendJson(response, 200, {
       ok: true,
       product: "Codex Aurora Skin",
@@ -389,6 +398,7 @@ server = http.createServer(async (request, response) => {
       });
     }
     if (url.pathname === "/app.js") return serveFile(response, path.join(webRoot, "app.js"), "text/javascript; charset=utf-8");
+    if (url.pathname === "/api-client.mjs") return serveFile(response, path.join(webRoot, "api-client.mjs"), "text/javascript; charset=utf-8");
     if (url.pathname === "/styles.css") return serveFile(response, path.join(webRoot, "styles.css"), "text/css; charset=utf-8");
     return sendError(response, 404, new Error("页面不存在"));
   } catch (error) {
@@ -405,7 +415,7 @@ server.listen(0, "127.0.0.1", async () => {
 });
 
 const idleTimer = setInterval(() => {
-  if (!shuttingDown && Date.now() - lastHeartbeatAt > HEARTBEAT_TIMEOUT_MS) {
+  if (!shuttingDown && heartbeatLease.tick() === "expired") {
     shuttingDown = true;
     server.close();
   }

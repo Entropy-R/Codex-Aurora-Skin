@@ -110,6 +110,13 @@ assert.match(
 );
 assert.match(source, /visibleSuggestionLabels\.length >= result\.visibleCardCount/);
 assert.match(source, /result\.suggestionLabelColorsMatch/);
+assert.match(
+  source,
+  /result\.composer\.y \+ result\.composer\.height <= result\.viewport\.height \+ 1/,
+  "Live verification must reject a home composer below the visible viewport.",
+);
+assert.match(source, /正在恢复皮肤连接/);
+assert.match(source, /皮肤连接恢复失败，请重新应用主题/);
 assert.match(source, /add\(themeParent,\s*"theme-parent"\)/,
   "Atomic active-theme directory replacement must be observed from its parent directory.");
 assert.match(source, /name\.startsWith\(themeBasename\)/);

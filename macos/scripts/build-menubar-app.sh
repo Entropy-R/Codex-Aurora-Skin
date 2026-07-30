@@ -121,8 +121,10 @@ actual_public_preset_theme_sha256="$(LC_ALL=C /usr/bin/shasum -a 256 \
 /bin/mkdir -p "$ENGINE/manager/web"
 for relative in \
   image-metadata.mjs \
+  heartbeat-lease.mjs \
   server.mjs \
   theme-store.mjs \
+  web/api-client.mjs \
   web/app.js \
   web/index.html \
   web/styles.css; do

@@ -16,3 +16,6 @@
 v1.0.0 发布未签名的 Windows Setup.exe 与使用 ad-hoc 签名、未经 Apple 公证的
 macOS 通用 DMG，并附双平台 SHA-256 校验文件。Release 元数据统一指向
 `Entropy-R/Codex-Aurora-Skin`。
+
+v1.0.1 候选统一修复双平台主页布局和管理器断线提示，并改善 macOS 休眠后的
+心跳租约与 CDP 自动恢复。v1.0.0 标签和既有构件保持不变。

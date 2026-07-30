@@ -455,118 +455,6 @@ html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_R
   overflow-x: hidden !important;
 }
 
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child {
-  min-height: 100% !important;
-  padding-top: 15px !important;
-}
-
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child {
-  flex: 0 0 440px !important;
-  min-height: 440px !important;
-  align-items: flex-start !important;
-  padding-bottom: 0 !important;
-}
-
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child {
-  position: relative !important;
-  isolation: isolate;
-  width: calc(100% - 44px) !important;
-  max-width: none !important;
-  height: clamp(248px, 31cqw, 376px) !important;
-  min-height: 248px !important;
-  flex: 0 1 auto !important;
-  overflow: visible !important;
-  padding: 0 !important;
-  border: 1px solid rgb(var(--ds-accent-rgb) / .30) !important;
-  border-radius: 22px !important;
-  background-color: var(--ds-panel) !important;
-  box-shadow: 0 16px 38px rgb(var(--ds-bg-rgb) / .30) !important;
-}
-
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  border-radius: 21px;
-  pointer-events: none;
-  background-image:
-    linear-gradient(rgb(var(--ds-art-scrim-rgb) / var(--ds-art-overlay-opacity)), rgb(var(--ds-art-scrim-rgb) / var(--ds-art-overlay-opacity))),
-    var(--aurora-skin-art);
-  background-repeat: no-repeat;
-  background-position: center, var(--ds-art-position);
-  background-size: 100% 100%, cover;
-  filter: brightness(var(--ds-art-brightness));
-}
-
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  z-index: 0;
-  width: 62%;
-  border-radius: 21px 0 0 21px;
-  pointer-events: none;
-  background: var(--ds-hero-scrim);
-}
-
-html[data-aurora-skin="active"]:is([data-dream-art-safe="right"], [data-dream-art-safe-area="right"])
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child::before {
-  inset: 0 0 0 auto;
-}
-
-html[data-aurora-skin="active"]:is([data-dream-art-safe="center"], [data-dream-art-safe-area="center"])
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child::before {
-  inset: 0 14%;
-  width: auto;
-  border-radius: 0;
-}
-
-html[data-aurora-skin="active"]:is([data-dream-art-safe="none"], [data-dream-art-safe-area="none"])
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child::before {
-  inset: 0;
-  width: auto;
-  border-radius: 21px;
-}
-
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child {
-  position: relative;
-  z-index: 1;
-  height: 100%;
-  align-items: center !important;
-  justify-content: flex-start !important;
-  padding: 0 38px;
-}
-
-html[data-aurora-skin="active"]:is([data-dream-art-safe="right"], [data-dream-art-safe-area="right"])
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child {
-  justify-content: flex-end !important;
-}
-
-html[data-aurora-skin="active"]:is([data-dream-art-safe="center"], [data-dream-art-safe-area="center"])
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child {
-  justify-content: center !important;
-}
-
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child > div:first-child {
-  width: min(46%, 520px) !important;
-  align-items: flex-start !important;
-  gap: 0 !important;
-}
-
-html[data-aurora-skin="active"]:is([data-dream-art-safe="right"], [data-dream-art-safe-area="right"])
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child > div:first-child {
-  align-items: flex-end !important;
-  text-align: right !important;
-}
-
-html[data-aurora-skin="active"]:is([data-dream-art-safe="center"], [data-dream-art-safe-area="center"])
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child > div:first-child {
-  width: min(58%, 640px) !important;
-  align-items: center !important;
-  text-align: center !important;
-}
-
 html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ __DREAM_SELECTOR_HOME_ICON__ { display: none !important; }
 
 html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ __DREAM_SELECTOR_GAME_SOURCE__ {
@@ -599,13 +487,6 @@ html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_R
   font-weight: 700;
   vertical-align: middle;
   opacity: .86;
-}
-
-html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:nth-child(2) {
-  left: 14px !important;
-  right: 14px !important;
-  top: 100% !important;
-  margin-top: 13px !important;
 }
 
 html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ __DREAM_SELECTOR_HOME_SUGGESTIONS__ { overflow: visible !important; }
@@ -737,19 +618,6 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"] __DREAM_SELECTOR_SHE
   > __DREAM_SELECTOR_HEADER_TINT__ svg {
   color: rgb(var(--ds-muted-rgb) / .96) !important;
   filter: drop-shadow(0 1px 2px rgb(var(--ds-bg-rgb) / .72));
-}
-
-html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-route="home"] __DREAM_SELECTOR_SHELL_MAIN__
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child {
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-}
-
-html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-route="home"] __DREAM_SELECTOR_SHELL_MAIN__
-  __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child::before {
-  content: none !important;
 }
 
 html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-route="home"] __DREAM_SELECTOR_SHELL_MAIN__
@@ -962,22 +830,9 @@ html[data-aurora-skin="active"] [data-message-author-role] { border-radius: 16px
   html[data-aurora-skin="active"][data-dream-route="home"]
     __DREAM_SELECTOR_SHELL_MAIN__::after { content: none; }
   html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ { --thread-content-max-width: min(940px, calc(100cqw - 30px)) !important; }
-  html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child { width: calc(100% - 28px) !important; }
 }
 
 @media (max-width: 900px) {
-  html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child {
-    flex-basis: 408px !important;
-    min-height: 408px !important;
-  }
-  html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child {
-    height: 232px !important;
-    min-height: 232px !important;
-  }
-  html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child { padding: 0 26px; }
-  html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ > div:first-child > div:first-child > div:first-child > div:first-child > div:first-child {
-    width: min(58%, 460px) !important;
-  }
   html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ __DREAM_SELECTOR_GAME_SOURCE__ { font-size: 18px !important; }
   html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ __DREAM_SELECTOR_GAME_SOURCE__::before { margin-bottom: 7px; font-size: 10px; }
   html[data-aurora-skin="active"][data-dream-route="home"] __DREAM_SELECTOR_HOME_ROUTE_CSS__ __DREAM_SELECTOR_GAME_SOURCE__::after { margin-top: 9px; font-size: 11px; }
