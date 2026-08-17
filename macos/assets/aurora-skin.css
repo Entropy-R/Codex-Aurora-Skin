@@ -795,7 +795,7 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"] :is(main:is(.main-su
    already owns its readable surface, so retaining this layer creates a false
    bottom panel and makes the control look duplicated. */
 html[data-aurora-skin="active"][data-dream-art-wide="true"] :is(main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]), [data-aurora-part="main"])
-  .thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary {
+  :is(.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary, .thread-scroll-container .bg-gradient-to-t.from-surface.via-surface) {
   background: transparent !important;
 }
 

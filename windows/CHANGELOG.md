@@ -4,6 +4,8 @@
 
 - 兼容 Codex 26.810 的新版 main、Header 与 Composer Layout Root，并修复旧
   verifier 在结构缺失时仍将 L0 报告为成功的问题。
+- 兼容 Codex 26.810 的新版会话底部渐变类，移除输入框后方的黑色遮罩，同时
+  保留较小的原生操作提示渐变。
 - v1.0.1 候选统一版本字段，等待 Windows PowerShell、Setup.exe 与实机布局门禁。
 - 新建普通任务和项目内任务的输入框沿用 Codex 原生纵向布局，不再被共享主页
   固定高度规则推离视口。

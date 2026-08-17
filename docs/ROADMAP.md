@@ -70,12 +70,16 @@
 - 证据：Windows Codex `26.810.7004.0` 将主表面和 Header 改为公开 app-shell
   属性与 CSS Modules，并将输入框稳定表面移到 Composer Layout Root。旧契约只
   命中侧栏，运行时将任务页误判为设置页；verifier 又把任意 L0 当作结构通过。
+  同版还将输入框后的整宽渐变改为 `from-surface via-surface`，旧透明化规则未
+  命中，形成 146px 高的黑色底部遮罩。
 - 修复：保留旧选择器并增加新版别名；以 `data-aurora-part` 提供有限语义回退；
   Composer 样式改施加到 Root，首页 Body/Footer 保持透明；未知页面进入
-  `unknown`，不得再伪装成设置页或报告成功。
+  `unknown`，不得再伪装成设置页或报告成功。底部渐变同时兼容旧 token 和新版
+  `from-surface.via-surface`，且不清除较小的原生操作提示渐变。
 - 验收：Windows 26.810 的已有任务和新建任务均达到 L1、`missingL1=[]`，背景、
-  Composer 与 Footer 可见且无横向溢出；PowerShell 7、Windows PowerShell 5.1
-  及双端 Node 回归均通过。设置页和未知页面由显式锚点回归测试覆盖。
+  Composer 与 Footer 可见且无横向溢出，整宽底部渐变计算样式为透明；PowerShell
+  7、Windows PowerShell 5.1 及双端 Node 回归均通过。设置页和未知页面由显式
+  锚点回归测试覆盖。
 
 ### BUG-MAC-001：休眠后管理器退出
 

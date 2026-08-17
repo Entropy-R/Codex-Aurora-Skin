@@ -297,6 +297,10 @@ export async function runRendererRuntimeTest(assetRoot) {
     "Compiled CSS must retain the semantic composer fallback.");
   assert.match(css, /_ComposerLayoutBody_[^{}]*\{\s*background:\s*transparent\s*!important;/s,
     "The 26.810 home composer body must not repaint over LayoutRoot.");
+  assert.match(css, /\.bg-gradient-to-t[^{}]*\.from-surface/,
+    "The 26.810 thread composer fade must be made transparent.");
+  assert.match(css, /\.bg-gradient-to-t[^{}]*\.via-surface/,
+    "The 26.810 thread composer midpoint fade must be made transparent.");
   assert.doesNotMatch(css, /aurora-skin-(?:name|tagline|quote)|MAKE SOMETHING WONDERFUL|Make something wonderful/);
   assert.doesNotMatch(template, /aurora-skin-(?:name|tagline|quote)|MAKE SOMETHING WONDERFUL|Make something wonderful/);
   assert.match(template, /wide:\s*ratio\s*>=\s*1\.45/,

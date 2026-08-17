@@ -37,6 +37,14 @@ assert.match(selectorFor("shell-main"), /_MainContentSurface_/);
 assert.match(selectorFor("header-tint"), /data-app-shell-header-edge-scroll/);
 assert.match(selectorFor("composer-chrome"), /data-composer-surface-variant/);
 assert.match(selectorFor("composer-toolbar"), /data-composer-footer-responsive/);
+assert.match(selectorFor("thread-composer-fade"), /from-token-main-surface-primary/,
+  "The thread composer fade must keep the legacy Codex selector.");
+assert.match(selectorFor("thread-composer-fade"), /from-surface/,
+  "The thread composer fade must cover the Codex 26.810 gradient source class.");
+assert.match(selectorFor("thread-composer-fade"), /via-surface/,
+  "The thread composer fade must cover the Codex 26.810 gradient midpoint class.");
+assert.match(selectorFor("thread-composer-fade"), /\.from-surface\.via-surface/,
+  "The modern selector must require both gradient classes and avoid clearing smaller action fades.");
 
 const pageResultFor = (hits) => {
   const hitSet = new Set(hits);

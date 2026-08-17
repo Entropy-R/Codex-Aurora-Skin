@@ -1125,7 +1125,7 @@ try {
     '_ComposerLayoutBody_',
     '[class~="group/application-menu-top-bar"]',
     '.app-shell-main-content-top-fade',
-    '.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary',
+    ':is(.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary, .thread-scroll-container .bg-gradient-to-t.from-surface.via-surface)',
     '--ds-immersive-composer',
     'var(--ds-art-position)',
     'html[data-aurora-skin="active"]',

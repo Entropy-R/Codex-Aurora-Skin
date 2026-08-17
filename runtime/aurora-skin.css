@@ -795,7 +795,7 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"] __DREAM_SELECTOR_SHE
    already owns its readable surface, so retaining this layer creates a false
    bottom panel and makes the control look duplicated. */
 html[data-aurora-skin="active"][data-dream-art-wide="true"] __DREAM_SELECTOR_SHELL_MAIN__
-  .thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary {
+  __DREAM_SELECTOR_THREAD_COMPOSER_FADE__ {
   background: transparent !important;
 }
 
