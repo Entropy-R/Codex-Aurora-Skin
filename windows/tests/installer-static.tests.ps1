@@ -55,6 +55,8 @@ if ($definition.Contains('ssPostInstall')) {
   throw 'Installer initialization must not rely on non-fatal ssPostInstall exceptions.'
 }
 foreach ($requiredDefinition in @(
+  'DisableDirPage=no',
+  'UsePreviousAppDir=yes',
   'PrivilegesRequired=lowest',
   'ArchitecturesAllowed=x64compatible',
   'OutputBaseFilename=CodexAuroraSkin-Setup-v{#AppVersion}',
