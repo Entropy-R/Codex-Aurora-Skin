@@ -37,7 +37,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.0";
+const SKIN_VERSION = "1.0.1";
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const CDP_ID_PATTERN = /^[A-Za-z0-9._-]{1,200}$/;
 const MAX_ART_BYTES = 16 * 1024 * 1024;
@@ -45,6 +45,7 @@ const OPERATION_UI_HOST_ID = "chatgpt-aurora-skin-operation";
 const OPERATION_UI_REGISTRY_KEY = "__CHATGPT_AURORA_SKIN_OPERATION_UI__";
 const OPERATION_KINDS = new Set(["apply", "pause", "switch"]);
 const OPERATION_UI_STATES = new Set(["success", "error", "cancelled"]);
+const AUTOMATIC_RECOVERY_GRACE_MS = 45_000;
 const OPERATION_UI_CSS = `
   :host {
     all: initial;
@@ -154,6 +155,16 @@ const OPERATION_UI_CSS = `
 `;
 let staticPayloadAssets = null;
 let operationSequence = 0;
+
+export function structurePassFor(result) {
+  const l1StructurePass = ["home", "thread"].includes(result.scope?.baseState) &&
+    result.scope?.level === "L1" && result.scope?.missingL1?.length === 0 &&
+    Boolean(result.shell?.visible) && Boolean(result.sidebar?.visible) &&
+    Boolean(result.header?.visible);
+  const settingsStructurePass = result.scope?.baseState === "settings" &&
+    result.scope?.level === "L0" && Boolean(result.settingsAnchor?.visible);
+  return l1StructurePass || settingsStructurePass;
+}
 
 function parseArgs(argv) {
   const options = {
@@ -382,14 +393,19 @@ async function probeSession(session) {
       composer: Boolean(document.querySelector(${selectorLiteral("composer-chrome")})),
       main: Boolean(document.querySelector(${selectorLiteral("home-route")})),
     };
-    const settings = Boolean(document.querySelector(${selectorLiteral("appearance-radio")})) ||
+    const settings = Boolean(document.querySelector(${selectorLiteral("settings-panel")})) ||
+      Boolean(document.querySelector(${selectorLiteral("appearance-radio")})) ||
       Boolean(document.querySelector(${stableTestidLiteral("theme-preview")}));
+    const generic = Boolean(document.querySelector('main, [role="main"]')) &&
+      Boolean(document.querySelector('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]')) &&
+      Boolean(document.querySelector(${stableTestidLiteral("app-shell-header-context-menu-surface")}));
+    markers.generic = generic;
     return {
       title: document.title,
       href: location.href,
       markers,
       codex: location.protocol === 'app:' &&
-        ((markers.shell && markers.sidebar) || settings || markers.main),
+        ((markers.shell && markers.sidebar) || settings || markers.main || generic),
     };
   })()`);
 }
@@ -944,6 +960,10 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
     const shell = box(document.querySelector(${selectorLiteral("shell-main")}));
     const composer = box(document.querySelector(${selectorLiteral("composer-chrome")}));
     const sidebar = box(document.querySelector(${selectorLiteral("left-panel")}));
+    const header = box(document.querySelector(${selectorLiteral("header-tint")}));
+    const settingsAnchor = box(document.querySelector(${selectorLiteral("settings-panel")}) ||
+      document.querySelector(${selectorLiteral("appearance-radio")}) ||
+      document.querySelector(${stableTestidLiteral("theme-preview")}));
     const runtime = window.__CODEX_AURORA_SKIN_STATE__;
     const adopted = runtime?.styleMode === 'adopted' &&
       [...document.adoptedStyleSheets].includes(runtime.styleSheet);
@@ -971,14 +991,15 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
       shell,
       composer,
       sidebar,
+      header,
+      settingsAnchor,
       viewport: { width: innerWidth, height: innerHeight },
       documentOverflow: {
         x: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         y: document.documentElement.scrollHeight > document.documentElement.clientHeight,
       },
     };
-    const structurePass = result.scope?.level === 'L0' ||
-      (Boolean(result.shell?.visible) && Boolean(result.sidebar?.visible));
+    const structurePass = (${structurePassFor.toString()})(result);
     const basePass = result.installed && result.version === ${JSON.stringify(SKIN_VERSION)} &&
       result.stylePresent && result.businessClassPollution === 0 && structurePass &&
       !result.documentOverflow.x;
@@ -988,8 +1009,10 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
       (!expectedRevision || result.revision === expectedRevision);
     // Project selector markup varies across Codex builds — soft requirement.
     const homePass = !result.homeRoute || (
-      result.homePresent && result.hero?.visible && result.hero.width >= 280 &&
-      result.hero.height >= 120 && (result.visibleCardCount === 0 || (
+      result.homePresent && result.composer?.visible &&
+      result.composer.y >= 0 &&
+      result.composer.y + result.composer.height <= result.viewport.height + 1 &&
+      (result.visibleCardCount === 0 || (
         visibleSuggestionLabels.length >= result.visibleCardCount &&
         result.suggestionLabelColorsMatch
       ))
@@ -999,7 +1022,8 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
     result.expectedRevision = expectedRevision;
     result.softNotes = {
       projectButtonOptional: !result.projectButton?.visible,
-      composerOptionalOnNonTaskRoutes: !result.composer?.visible,
+      heroOptional: result.homeRoute && !result.hero?.visible,
+      composerOptionalOnNonTaskRoutes: !result.homeRoute && !result.composer?.visible,
       suggestionCardsOptional: result.homeRoute && result.visibleCardCount === 0,
     };
     return result;
@@ -1208,9 +1232,13 @@ export function earlyPayloadFor(payload, revision) {
       const shell = document.querySelector(${selectorLiteral("shell-main")});
       const sidebar = document.querySelector(${selectorLiteral("left-panel")});
       const main = document.querySelector(${selectorLiteral("home-route")});
-      const settings = document.querySelector(${selectorLiteral("appearance-radio")}) ||
+      const settings = document.querySelector(${selectorLiteral("settings-panel")}) ||
+        document.querySelector(${selectorLiteral("appearance-radio")}) ||
         document.querySelector(${stableTestidLiteral("theme-preview")});
-      return Boolean((shell && sidebar) || settings || main);
+      const generic = document.querySelector('main, [role="main"]') &&
+        document.querySelector('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]') &&
+        document.querySelector(${stableTestidLiteral("app-shell-header-context-menu-surface")});
+      return Boolean((shell && sidebar) || settings || main || generic);
     };
     const install = () => {
       if (window[generationKey] !== generation) { stop(); return true; }
@@ -1370,6 +1398,7 @@ async function runWatch(options) {
   let pauseRecovery = null;
   let controlOnly = false;
   let mutationEpoch = 0;
+  let automaticRecovery = null;
   let activeTargetSetups = 0;
   const targetSetupWaiters = new Set();
   let wakeControlWait = null;
@@ -1704,6 +1733,14 @@ async function runWatch(options) {
               record.session, "hide", record.operationToken, "loading", "",
             );
           }
+          if (record.verified && !activeOperation && !controlOnly) {
+            automaticRecovery ??= {
+              startedAt: Date.now(),
+              token: nextOperationToken(),
+              loadingShown: false,
+              failureNotified: false,
+            };
+          }
           record.session.close();
           sessions.delete(id);
         }
@@ -1728,6 +1765,7 @@ async function runWatch(options) {
             needsLoadFallback: false,
             operationToken: null,
             operationExternal: false,
+            verified: false,
           };
           connectionEpoch = mutationEpoch;
           sessions.set(target.id, record);
@@ -1778,18 +1816,28 @@ async function runWatch(options) {
           }
           record.operationToken = initialOperation?.token
             ?? recoveryOperation?.token
+            ?? automaticRecovery?.token
             ?? nextOperationToken();
           record.operationExternal = Boolean(initialOperation || recoveryOperation);
-          await presentOperationUi(
-            session,
-            record.operationToken,
-            "loading",
-            initialOperation
-              ? operationKindMessage(initialOperation.status === "pausing" ? "pause" : "apply")
-              : recoveryOperation
-                ? "暂停未完成，正在恢复原皮肤…"
-              : `正在应用「${current.theme.name}」…`,
-          );
+          const shouldPresentLoading = !automaticRecovery || !automaticRecovery.loadingShown ||
+            Boolean(initialOperation || recoveryOperation);
+          if (shouldPresentLoading) {
+            await presentOperationUi(
+              session,
+              record.operationToken,
+              "loading",
+              initialOperation
+                ? operationKindMessage(initialOperation.status === "pausing" ? "pause" : "apply")
+                : recoveryOperation
+                  ? "暂停未完成，正在恢复原皮肤…"
+                  : automaticRecovery
+                    ? "正在恢复皮肤连接…"
+                    : `正在应用「${current.theme.name}」…`,
+            );
+            if (automaticRecovery && !initialOperation && !recoveryOperation) {
+              automaticRecovery.loadingShown = true;
+            }
+          }
           if (controlOnly || pausing) {
             continue;
           }
@@ -1817,6 +1865,8 @@ async function runWatch(options) {
             current.revision,
           );
           if (!verification?.pass) throw new Error("Initial theme verification failed");
+          record.verified = true;
+          if (record.operationExternal && automaticRecovery) automaticRecovery = null;
           if (recoveryOperation && !activeOperation
             && pauseRecovery?.token === recoveryOperation.token) {
             await presentOperationUi(
@@ -1827,6 +1877,11 @@ async function runWatch(options) {
               1000,
             );
             recoveredPauseThisCycle = true;
+          } else if (automaticRecovery && !record.operationExternal) {
+            await presentOperationUi(
+              session, automaticRecovery.token, "success", "皮肤连接已恢复",
+            );
+            automaticRecovery = null;
           } else if (!record.operationExternal) {
             await presentOperationUi(
               session, record.operationToken, "success", `已应用「${current.theme.name}」`,
@@ -1846,6 +1901,17 @@ async function runWatch(options) {
                 "暂停失败，原皮肤恢复未确认",
                 1000,
               );
+            } else if (automaticRecovery && !record.operationExternal) {
+              if (Date.now() - automaticRecovery.startedAt >= AUTOMATIC_RECOVERY_GRACE_MS &&
+                !automaticRecovery.failureNotified) {
+                automaticRecovery.failureNotified = true;
+                await presentOperationUi(
+                  session,
+                  automaticRecovery.token,
+                  "error",
+                  "皮肤连接恢复失败，请重新应用主题",
+                );
+              }
             } else if (!record.operationExternal) {
               await presentOperationUi(
                 session, record.operationToken, "error", "应用失败，未通过显示校验",

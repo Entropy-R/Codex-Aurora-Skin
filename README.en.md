@@ -9,15 +9,30 @@ configuration, plugins, or tasks.
 
 ## Downloads
 
-Download the public Windows package from
+Download the public package for your platform from
 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases):
 
 - Windows: `CodexAuroraSkin-Setup-v*.exe`
+- macOS: `CodexAuroraSkin-v*.dmg`
 - Checksums: `SHA256SUMS.txt`
 
-The artifact is currently unsigned. macOS source and tests remain available,
-but v1.0.0 does not build or publish a DMG. The product starts only when
-requested, does not create a login item, and does not check for updates online.
+The public artifacts do not currently use commercial code signing. The macOS
+app has an ad-hoc signature and is not notarized by Apple, so its first launch
+requires explicit approval in System Settings > Privacy & Security. The product
+starts only when requested, does not create a login item, and does not check
+for updates online.
+
+### First use on macOS
+
+1. Open the downloaded DMG and drag **Codex Aurora Skin** to **Applications**.
+2. Try to launch it once. If macOS blocks it, verify its SHA-256 against the
+   release, then use **Open Anyway** in System Settings > Privacy & Security.
+3. Launch the app again to open the local theme manager in your browser.
+4. Choose a theme and apply it. Approve the Codex restart when prompted.
+5. Use **Restore official appearance** in the manager to end the themed session.
+
+See the [macOS installation guide](./docs/install-macos.md) and
+[Apple's official safety guidance](https://support.apple.com/en-us/102445).
 
 ## Theme manager
 
@@ -56,3 +71,12 @@ follow the official Codex light/dark appearance.
 
 See the [Windows](./docs/install-windows.md) and
 [macOS](./docs/install-macos.md) installation guides.
+
+## Development roadmap
+
+Bug fixes, optimizations, and new development work for Windows, macOS, and
+shared modules are maintained in the unified
+[development roadmap](./docs/ROADMAP.md). Its priorities, target versions, and
+acceptance criteria define the follow-up work. Cross-device handoff and release
+integration branch rules are documented in the
+[development workflow](./docs/DEVELOPMENT_WORKFLOW.md).

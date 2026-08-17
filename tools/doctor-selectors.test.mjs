@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-import { gradeDoctorResult, selectorMatchesScope } from "./doctor-selectors.mjs";
+import { gradeDoctorResult, pageDoctor, selectorMatchesScope } from "./doctor-selectors.mjs";
 
 const contract = JSON.parse(await fs.readFile(new URL("./selectors.json", import.meta.url), "utf8"));
 const resultFor = (baseState, hits, overlay = false) => gradeDoctorResult(contract, {
@@ -25,7 +25,63 @@ assert.equal(brokenHome.exitCode, 1);
 const settings = resultFor("settings", ["appearance-radio"]);
 assert.equal(settings.pass, true);
 assert.equal(settings.tiers.L1.length, 0, "Settings must not inherit home/all L1 requirements");
-assert.deepEqual(settings.tiers.L2.map(({ key }) => key), ["appearance-radio"]);
+assert.deepEqual(settings.tiers.L2.map(({ key }) => key), ["settings-panel", "appearance-radio"]);
+
+const unknown = resultFor("unknown", []);
+assert.equal(unknown.pass, false, "Unknown app surfaces must never receive a false-green result");
+assert.equal(unknown.exitCode, 1);
+
+const selectorFor = (key) => contract.selectors.find((entry) => entry.key === key)?.selector;
+assert.match(selectorFor("shell-main"), /data-app-shell-main-surface/);
+assert.match(selectorFor("shell-main"), /_MainContentSurface_/);
+assert.match(selectorFor("header-tint"), /data-app-shell-header-edge-scroll/);
+assert.match(selectorFor("composer-chrome"), /data-composer-surface-variant/);
+assert.match(selectorFor("composer-toolbar"), /data-composer-footer-responsive/);
+assert.match(selectorFor("thread-composer-fade"), /from-token-main-surface-primary/,
+  "The thread composer fade must keep the legacy Codex selector.");
+assert.match(selectorFor("thread-composer-fade"), /from-surface/,
+  "The thread composer fade must cover the Codex 26.810 gradient source class.");
+assert.match(selectorFor("thread-composer-fade"), /via-surface/,
+  "The thread composer fade must cover the Codex 26.810 gradient midpoint class.");
+assert.match(selectorFor("thread-composer-fade"), /\.from-surface\.via-surface/,
+  "The modern selector must require both gradient classes and avoid clearing smaller action fades.");
+
+const pageResultFor = (hits) => {
+  const hitSet = new Set(hits);
+  const originalDocument = globalThis.document;
+  const originalMatchMedia = globalThis.matchMedia;
+  globalThis.document = {
+    documentElement: { classList: { contains: (name) => name === "electron-dark" } },
+    querySelector(selector) {
+      return this.querySelectorAll(selector)[0] || null;
+    },
+    querySelectorAll(selector) {
+      const contractKey = contract.selectors.find((entry) => entry.selector === selector)?.key;
+      if (contractKey && hitSet.has(contractKey)) return [{}];
+      const testid = /^\[data-testid="([^"]+)"\]$/.exec(selector)?.[1];
+      return testid && hitSet.has(`testid:${testid}`) ? [{}] : [];
+    },
+  };
+  globalThis.matchMedia = () => ({ matches: false });
+  try {
+    return pageDoctor(contract.selectors, contract.stableTestids);
+  } finally {
+    globalThis.document = originalDocument;
+    globalThis.matchMedia = originalMatchMedia;
+  }
+};
+
+const codex26810 = pageResultFor(["shell-main", "left-panel", "header-tint", "composer-chrome"]);
+assert.equal(codex26810.baseState, "thread");
+assert.equal(gradeDoctorResult(contract, codex26810).pass, true);
+
+const modernSettings = pageResultFor(["settings-panel"]);
+assert.equal(modernSettings.baseState, "settings");
+assert.equal(gradeDoctorResult(contract, modernSettings).pass, true);
+
+const unknownPage = pageResultFor([]);
+assert.equal(unknownPage.baseState, "unknown");
+assert.equal(gradeDoctorResult(contract, unknownPage).pass, false);
 
 assert.equal(selectorMatchesScope("home+thread", { baseState: "thread", overlay: false }), true);
 assert.equal(selectorMatchesScope("home config", { baseState: "home", overlay: false }), true);

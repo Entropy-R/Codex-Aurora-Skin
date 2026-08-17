@@ -33,7 +33,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.0";
+const SKIN_VERSION = "1.0.1";
 const MAX_ART_BYTES = 16 * 1024 * 1024;
 const STRONG_THEME_AUDIT_MS = 30000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
@@ -131,6 +131,16 @@ const OPERATION_UI_CSS = `
 let operationSequence = 0;
 
 class CdpIdentityMismatchError extends Error {}
+
+export function structurePassFor(result) {
+  const l1StructurePass = ["home", "thread"].includes(result.scope?.baseState) &&
+    result.scope?.level === "L1" && result.scope?.missingL1?.length === 0 &&
+    Boolean(result.shell?.visible) && Boolean(result.sidebar?.visible) &&
+    Boolean(result.header?.visible);
+  const settingsStructurePass = result.scope?.baseState === "settings" &&
+    result.scope?.level === "L0" && Boolean(result.settingsAnchor?.visible);
+  return l1StructurePass || settingsStructurePass;
+}
 
 function parseArgs(argv) {
   const options = {
@@ -670,12 +680,17 @@ async function probeSession(session) {
       composer: Boolean(document.querySelector(${selectorLiteral("composer-chrome")})),
       main: Boolean(document.querySelector(${selectorLiteral("home-route")})),
     };
-    const settings = Boolean(document.querySelector(${selectorLiteral("appearance-radio")})) ||
+    const settings = Boolean(document.querySelector(${selectorLiteral("settings-panel")})) ||
+      Boolean(document.querySelector(${selectorLiteral("appearance-radio")})) ||
       Boolean(document.querySelector(${stableTestidLiteral("theme-preview")}));
+    const generic = Boolean(document.querySelector('main, [role="main"]')) &&
+      Boolean(document.querySelector('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]')) &&
+      Boolean(document.querySelector(${stableTestidLiteral("app-shell-header-context-menu-surface")}));
+    markers.generic = generic;
     return {
       markers,
       codex: location.protocol === 'app:' &&
-        ((markers.shell && markers.sidebar) || settings || markers.main),
+        ((markers.shell && markers.sidebar) || settings || markers.main || generic),
     };
   })()`);
 }
@@ -752,9 +767,13 @@ export function earlyPayloadFor(payload, revision) {
       const shell = document.querySelector(${selectorLiteral("shell-main")});
       const sidebar = document.querySelector(${selectorLiteral("left-panel")});
       const main = document.querySelector(${selectorLiteral("home-route")});
-      const settings = document.querySelector(${selectorLiteral("appearance-radio")}) ||
+      const settings = document.querySelector(${selectorLiteral("settings-panel")}) ||
+        document.querySelector(${selectorLiteral("appearance-radio")}) ||
         document.querySelector(${stableTestidLiteral("theme-preview")});
-      return Boolean((shell && sidebar) || settings || main);
+      const generic = document.querySelector('main, [role="main"]') &&
+        document.querySelector('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]') &&
+        document.querySelector(${stableTestidLiteral("app-shell-header-context-menu-surface")});
+      return Boolean((shell && sidebar) || settings || main || generic);
     };
     const install = () => {
       if (window[generationKey] !== generation) { stop(); return true; }
@@ -1007,7 +1026,12 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
     const box = (node) => {
       if (!node) return null;
       const r = node.getBoundingClientRect();
-      return { x: Math.round(r.x), y: Math.round(r.y), width: Math.round(r.width), height: Math.round(r.height) };
+      const style = getComputedStyle(node);
+      return {
+        x: Math.round(r.x), y: Math.round(r.y),
+        width: Math.round(r.width), height: Math.round(r.height),
+        visible: r.width > 0 && r.height > 0 && style.display !== 'none' && style.visibility !== 'hidden',
+      };
     };
     const home = document.querySelector(${selectorLiteral("home-route")});
     const suggestions = home?.querySelector(${selectorLiteral("home-suggestions")}) ?? null;
@@ -1036,14 +1060,17 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
       composer: box(document.querySelector(${selectorLiteral("composer-chrome")})),
       shell: box(document.querySelector(${selectorLiteral("shell-main")})),
       sidebar: box(document.querySelector(${selectorLiteral("left-panel")})),
+      header: box(document.querySelector(${selectorLiteral("header-tint")})),
+      settingsAnchor: box(document.querySelector(${selectorLiteral("settings-panel")}) ||
+        document.querySelector(${selectorLiteral("appearance-radio")}) ||
+        document.querySelector(${stableTestidLiteral("theme-preview")})),
       viewport: { width: innerWidth, height: innerHeight },
       documentOverflow: {
         x: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         y: document.documentElement.scrollHeight > document.documentElement.clientHeight,
       },
     };
-    const structurePass = result.scope?.level === 'L0' ||
-      (Boolean(result.shell) && Boolean(result.sidebar));
+    const structurePass = (${structurePassFor.toString()})(result);
     const expectedThemeId = ${JSON.stringify(expectedThemeId)};
     const expectedRevision = ${JSON.stringify(expectedRevision)};
     const payloadPass = (!expectedThemeId || result.themeId === expectedThemeId) &&
@@ -1053,7 +1080,9 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
     result.pass = result.installed && result.version === result.expectedVersion &&
       result.stylePresent && result.businessClassPollution === 0 && structurePass &&
       payloadPass &&
-      (!result.homePresent || (Boolean(result.hero) &&
+      (!result.homePresent || (Boolean(result.composer) &&
+        result.composer.y >= 0 &&
+        result.composer.y + result.composer.height <= result.viewport.height + 1 &&
         (!result.suggestionsPresent || (result.cards.length >= 2 && result.cards.length <= 4))));
     return result;
   })()`);
