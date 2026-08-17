@@ -43,6 +43,7 @@
 | 编号 | 平台 | 优先级 | 状态 | 目标版本 | 摘要 |
 | --- | --- | --- | --- | --- | --- |
 | `BUG-ALL-001` | 共用 | P1 | 进行中 | `v1.0.1` 候选 | 旧主页结构规则将新建对话输入框推到视口外 |
+| `BUG-ALL-002` | 共用 | P1 | 已完成 | `v1.0.1` 候选 | Codex 26.810 更换 shell/header/composer 结构后主题失效且验证器误报成功 |
 | `BUG-MAC-001` | macOS | P1 | 已完成 | `v1.0.1` 候选 | 休眠超过心跳超时后，管理器在唤醒时退出 |
 | `BUG-MAC-002` | macOS | P1 | 已完成 | `v1.0.1` 候选 | CDP 重连期间过早报告“未通过显示校验” |
 
@@ -63,6 +64,18 @@
   - 关键选择器缺失时页面保持可操作，不隐藏或裁切原生控件；
   - 增加两种新建对话页及普通对话页的 DOM 回归样例；
   - 同步共用运行时资源，并分别完成 Windows、macOS 回归验证。
+
+### BUG-ALL-002：Codex 26.810 renderer 兼容
+
+- 证据：Windows Codex `26.810.7004.0` 将主表面和 Header 改为公开 app-shell
+  属性与 CSS Modules，并将输入框稳定表面移到 Composer Layout Root。旧契约只
+  命中侧栏，运行时将任务页误判为设置页；verifier 又把任意 L0 当作结构通过。
+- 修复：保留旧选择器并增加新版别名；以 `data-aurora-part` 提供有限语义回退；
+  Composer 样式改施加到 Root，首页 Body/Footer 保持透明；未知页面进入
+  `unknown`，不得再伪装成设置页或报告成功。
+- 验收：Windows 26.810 的已有任务和新建任务均达到 L1、`missingL1=[]`，背景、
+  Composer 与 Footer 可见且无横向溢出；PowerShell 7、Windows PowerShell 5.1
+  及双端 Node 回归均通过。设置页和未知页面由显式锚点回归测试覆盖。
 
 ### BUG-MAC-001：休眠后管理器退出
 

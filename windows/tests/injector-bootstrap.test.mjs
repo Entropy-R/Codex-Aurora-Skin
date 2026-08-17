@@ -3,11 +3,26 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
-import { earlyPayloadFor } from "../scripts/injector.mjs";
+import { earlyPayloadFor, structurePassFor } from "../scripts/injector.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const injectorPath = path.resolve(here, "../scripts/injector.mjs");
 const source = await fs.readFile(injectorPath, "utf8");
+
+const visible = { visible: true };
+assert.equal(structurePassFor({
+  scope: { baseState: "thread", level: "L0", missingL1: ["shell-main", "header-tint"] },
+}), false, "A degraded thread must not pass merely because it is L0.");
+assert.equal(structurePassFor({
+  scope: { baseState: "thread", level: "L1", missingL1: [] },
+  shell: visible, sidebar: visible, header: visible,
+}), true);
+assert.equal(structurePassFor({
+  scope: { baseState: "settings", level: "L0", missingL1: [] }, settingsAnchor: visible,
+}), true);
+assert.equal(structurePassFor({
+  scope: { baseState: "unknown", level: "L0", missingL1: ["shell-main"] },
+}), false);
 
 function createFixture() {
   const domReady = [];
@@ -15,7 +30,10 @@ function createFixture() {
   const intervals = new Map();
   let nextTimer = 1;
   let nextInterval = 1;
-  const markers = { shell: false, sidebar: false, main: false, settings: false };
+  const markers = {
+    shell: false, sidebar: false, main: false, settings: false,
+    genericMain: false, composerInput: false, brand: false,
+  };
   let root = {};
   let body = {};
   const context = {
@@ -26,10 +44,17 @@ function createFixture() {
       get body() { return body; },
       addEventListener(type, callback) { if (type === "DOMContentLoaded") domReady.push(callback); },
       querySelector(selector) {
-        if (selector === "main.main-surface") return markers.shell ? {} : null;
+        if (selector.includes("main-surface") || selector.includes("MainContentSurface") ||
+          selector.includes("app-shell-main-surface")) return markers.shell ? {} : null;
         if (selector === "aside.app-shell-left-panel") return markers.sidebar ? {} : null;
         if (selector === "[role=\"main\"]") return markers.main ? {} : null;
-        if (selector.includes("appearance-theme") || selector.includes("theme-preview")) {
+        if (selector === 'main, [role="main"]') return markers.genericMain ? {} : null;
+        if (selector.includes("data-codex-composer") || selector.includes("role=\"textbox\"")) {
+          return markers.composerInput ? {} : null;
+        }
+        if (selector.includes("app-shell-header-context-menu-surface")) return markers.brand ? {} : null;
+        if (selector.includes("settings-panel-slug") || selector.includes("appearance-theme") ||
+          selector.includes("theme-preview")) {
           return markers.settings ? {} : null;
         }
         return null;
@@ -70,6 +95,16 @@ guarded.markers.sidebar = true;
 guarded.tick();
 assert.deepEqual(guarded.context.window.installs, ["guarded"]);
 
+const generic = createFixture();
+vm.runInNewContext(earlyPayloadFor('window.installs.push("generic")', "generic"), generic.context);
+generic.markers.genericMain = true;
+generic.markers.composerInput = true;
+generic.tick();
+assert.deepEqual(generic.context.window.installs, [], "Generic probing must require the Codex brand anchor.");
+generic.markers.brand = true;
+generic.tick();
+assert.deepEqual(generic.context.window.installs, ["generic"]);
+
 const generations = createFixture();
 generations.makeNotReady();
 generations.markers.shell = true;
@@ -106,5 +141,10 @@ assert.match(source, /Page\.removeScriptToEvaluateOnNewDocument/,
 assert.match(source, /fs\.readFile\(loadedTheme\.themePath,\s*"utf8"\)/,
   "Theme refresh must hash JSON content instead of trusting same-length timestamp metadata.");
 assert.match(source, /createHash\("sha256"\)\.update\(themeText,\s*"utf8"\)/);
+assert.doesNotMatch(source, /scope\?\.level === 'L0'\s*\|\|/,
+  "L0 must not bypass native structure verification.");
+assert.match(source, /const l1StructurePass = \["home", "thread"\]\.includes/);
+assert.match(source, /const settingsStructurePass = result\.scope\?\.baseState === "settings"/);
+assert.match(source, /Boolean\(result\.settingsAnchor\?\.visible\)/);
 
 console.log("PASS: Windows early injection is L0-ready, generation-safe, ordered before probing, and fallback-scoped.");

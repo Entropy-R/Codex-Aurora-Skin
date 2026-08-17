@@ -58,6 +58,15 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
       closest(selector) { return closest[selector] || null; },
     };
   };
+  const shellMain = makeElement();
+  const sidebar = makeElement();
+  const header = makeElement();
+  const composerToolbar = makeElement();
+  const composer = makeElement();
+  composer.querySelector = (selector) =>
+    selector.includes("composer-toolbar") || selector.includes("composer-footer") ||
+      selector.includes("ComposerLayoutFooter")
+      ? composerToolbar : null;
   const root = {
     classList: rootClasses,
     style: rootStyle,
@@ -91,13 +100,24 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
     getElementById(id) { return nodes.get(id) || null; },
     querySelector(selector) {
       if (page.route === "settings" &&
-        (selector.includes("appearance-theme") || selector.includes("theme-preview"))) return { selector };
-      if (selector === "main.main-surface") return page.shellPresent ? { selector } : null;
-      if (selector === "aside.app-shell-left-panel" || selector === "header.app-header-tint") {
-        return page.shellPresent ? { selector } : null;
+        (selector.includes("settings-panel-slug") || selector.includes("appearance-theme") ||
+          selector.includes("theme-preview"))) return { selector };
+      if (selector === 'main, [role="main"]') return page.shellPresent ? shellMain : null;
+      if (selector.includes("main-surface") || selector.includes("MainContentSurface") ||
+        selector.includes("app-shell-main-surface")) return page.shellPresent ? shellMain : null;
+      if (selector.includes("aside.app-shell-left-panel")) {
+        return page.shellPresent ? sidebar : null;
+      }
+      if (selector.includes("app-header-tint") || selector.includes("app-shell-header-edge-scroll") ||
+        selector.includes("_Header_")) {
+        return page.shellPresent ? header : null;
       }
       if (selector.includes("[role=\"main\"]") || selector.includes("[data-testid=\"home-icon\"]")) {
         return page.route === "home" ? { selector } : null;
+      }
+      if (selector.includes("composer-surface-chrome") ||
+        selector.includes("data-composer-surface-variant")) {
+        return page.route === "home" || page.route === "thread" ? composer : null;
       }
       if (selector.includes("_homeUtilityBar_")) return page.homeUtility ? { selector } : null;
       if (selector.includes("group\\/project-selector")) return page.projectSelectors[0] || null;
@@ -190,7 +210,8 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
   };
   return {
     addProject, addSearch, attributeLog, attrs, context, document, flushTimers,
-    intervals, listeners, nodes, observers, page, payloadFor, revoked, root,
+    composer, composerToolbar, header, intervals, listeners, nodes, observers, page, payloadFor,
+    revoked, root, shellMain, sidebar,
     rootClasses, rootStyle, setRoute, timers, window,
   };
 }
@@ -270,8 +291,12 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.match(css, /--ds-surface-strong:\s*rgb\(var\(--ds-panel-rgb\)\s*\/\s*var\(--ds-surface-opacity\)\)/);
   assert.doesNotMatch(css, /aurora-skin-brand-subtitle|aurora-skin-status/,
     "Thread header must not inject Aurora Skin branding or online status labels.");
-  assert.match(css, /:not\(\[data-dream-route="home"\]\)\s+main\.main-surface::before\s*\{[\s\S]*?opacity:\s*1;/,
+  assert.match(css, /:not\(\[data-dream-route="home"\]\)\s+:is\([^{}]*data-aurora-part="main"[^{}]*\)::before\s*\{[\s\S]*?opacity:\s*1;/,
     "The task artwork layer must retain the same opacity shown by the manager preview.");
+  assert.match(css, /data-aurora-part="composer"/,
+    "Compiled CSS must retain the semantic composer fallback.");
+  assert.match(css, /_ComposerLayoutBody_[^{}]*\{\s*background:\s*transparent\s*!important;/s,
+    "The 26.810 home composer body must not repaint over LayoutRoot.");
   assert.doesNotMatch(css, /aurora-skin-(?:name|tagline|quote)|MAKE SOMETHING WONDERFUL|Make something wonderful/);
   assert.doesNotMatch(template, /aurora-skin-(?:name|tagline|quote)|MAKE SOMETHING WONDERFUL|Make something wonderful/);
   assert.match(template, /wide:\s*ratio\s*>=\s*1\.45/,
@@ -306,6 +331,11 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.equal(home.document.adoptedStyleSheets.length, 1);
   assert.equal(state.scope.baseState, "home");
   assert.equal(state.scope.level, "L1");
+  assert.equal(home.shellMain.getAttribute("data-aurora-part"), "main");
+  assert.equal(home.sidebar.getAttribute("data-aurora-part"), "sidebar");
+  assert.equal(home.header.getAttribute("data-aurora-part"), "header");
+  assert.equal(home.composer.getAttribute("data-aurora-part"), "composer");
+  assert.equal(home.composerToolbar.getAttribute("data-aurora-part"), "composer-toolbar");
   assert.equal(home.rootStyle.values.get("--ds-art-brightness"), "0.47");
   assert.equal(home.rootStyle.values.get("--ds-art-overlay-opacity"), "0.31");
   assert.equal(home.rootStyle.values.get("--ds-surface-opacity"), "0.53");
@@ -371,6 +401,9 @@ export async function runRendererRuntimeTest(assetRoot) {
 
   assert.equal(state.cleanup(), true);
   assert.equal(project.host.getAttribute("data-dream-project-host"), null);
+  assert.equal(home.shellMain.getAttribute("data-aurora-part"), null);
+  assert.equal(home.composer.getAttribute("data-aurora-part"), null);
+  assert.equal(home.composerToolbar.getAttribute("data-aurora-part"), null);
   assert.equal(home.timers.size, 0);
   assert.equal(home.attrs.size, 0);
 
@@ -382,6 +415,13 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.equal(settings.attrs.get("data-dream-shell-present"), "false");
   assert.equal(settings.attrs.get("data-aurora-skin"), "active");
   assert.equal(settings.document.adoptedStyleSheets.length, 1);
+
+  const unknown = makeFixture({ nativeAppearance: "light" });
+  unknown.setRoute("unknown", { shellPresent: false });
+  vm.runInNewContext(unknown.payloadFor(), unknown.context);
+  assert.equal(unknown.window.__CODEX_AURORA_SKIN_STATE__.scope.baseState, "unknown");
+  assert.equal(unknown.window.__CODEX_AURORA_SKIN_STATE__.scope.level, "L0");
+  assert.equal(unknown.attrs.get("data-dream-route"), "unknown");
 
   const explicit = makeFixture({ nativeAppearance: "light" });
   const result = vm.runInNewContext(explicit.payloadFor({ appearance: "dark", quote: "TEST QUOTE" }), explicit.context);

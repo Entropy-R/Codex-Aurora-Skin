@@ -24,12 +24,23 @@ for (const entry of contract.selectors) {
   selectors.set(entry.key, entry.selector);
 }
 
+// CSS 可将运行时语义标记作为保守回退，但 doctor/verifier 仍只检查 Codex
+// 原生 DOM，避免 Aurora 用自己写入的属性制造“验证成功”。
+const selectorFallbacks = new Map([
+  ["shell-main", '[data-aurora-part="main"]'],
+  ["left-panel", '[data-aurora-part="sidebar"]'],
+  ["header-tint", '[data-aurora-part="header"]'],
+  ["composer-chrome", '[data-aurora-part="composer"]'],
+  ["composer-toolbar", '[data-aurora-part="composer-toolbar"]'],
+]);
+
 function compileSelectorTokens(source, sourceName) {
   const compiled = source.replace(/__DREAM_SELECTOR_([A-Z0-9_]+)__/g, (token, identifier) => {
     const key = identifier.toLowerCase().replaceAll("_", "-");
     const selector = selectors.get(key);
     if (!selector) throw new Error(`${sourceName} references unknown selector token ${token}`);
-    return selector;
+    const fallback = selectorFallbacks.get(key);
+    return fallback ? `:is(${selector}, ${fallback})` : selector;
   });
   const unresolved = compiled.match(/__DREAM_SELECTOR_[A-Za-z0-9_]+__/);
   if (unresolved) throw new Error(`${sourceName} contains unresolved selector token ${unresolved[0]}`);

@@ -260,6 +260,12 @@ html[data-aurora-skin="active"] __DREAM_SELECTOR_SHELL_MAIN__ {
   box-shadow: -8px 0 28px rgb(var(--ds-bg-rgb) / .18) !important;
 }
 
+/* Codex 26.727+ 会在主题主表面上方绘制原生不透明渐变；这是可选精修，
+   旧版匹配不到时保持静默降级。 */
+html[data-aurora-skin="active"] __DREAM_SELECTOR_MAIN_CONTENT_TOP_FADE__ {
+  background: transparent !important;
+}
+
 html[data-aurora-skin="active"]:not([data-dream-route="home"]) __DREAM_SELECTOR_SHELL_MAIN__::before {
   content: "";
   position: absolute;
@@ -733,6 +739,15 @@ html[data-aurora-skin="active"] __DREAM_SELECTOR_COMPOSER_CHROME__ button:not([c
 html[data-aurora-skin="active"] __DREAM_SELECTOR_COMPOSER_CHROME__ p.placeholder::after {
   color: rgb(var(--ds-muted-rgb) / .82) !important;
   opacity: 1 !important;
+}
+
+/* 26.810 将稳定输入框表面移到 LayoutRoot；首页内部 Body 与 Footer 必须透明，
+   不能重新覆盖已经着色的 Root。 */
+html[data-aurora-skin="active"][data-dream-route="home"]
+  __DREAM_SELECTOR_COMPOSER_CHROME__ > [class*="_ComposerLayoutBody_"],
+html[data-aurora-skin="active"][data-dream-route="home"]
+  __DREAM_SELECTOR_COMPOSER_CHROME__ __DREAM_SELECTOR_COMPOSER_TOOLBAR__ {
+  background: transparent !important;
 }
 
 /* Search routes ship an opaque sticky band and input surface. Keep the

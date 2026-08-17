@@ -156,6 +156,16 @@ const OPERATION_UI_CSS = `
 let staticPayloadAssets = null;
 let operationSequence = 0;
 
+export function structurePassFor(result) {
+  const l1StructurePass = ["home", "thread"].includes(result.scope?.baseState) &&
+    result.scope?.level === "L1" && result.scope?.missingL1?.length === 0 &&
+    Boolean(result.shell?.visible) && Boolean(result.sidebar?.visible) &&
+    Boolean(result.header?.visible);
+  const settingsStructurePass = result.scope?.baseState === "settings" &&
+    result.scope?.level === "L0" && Boolean(result.settingsAnchor?.visible);
+  return l1StructurePass || settingsStructurePass;
+}
+
 function parseArgs(argv) {
   const options = {
     port: 9341,
@@ -383,14 +393,19 @@ async function probeSession(session) {
       composer: Boolean(document.querySelector(${selectorLiteral("composer-chrome")})),
       main: Boolean(document.querySelector(${selectorLiteral("home-route")})),
     };
-    const settings = Boolean(document.querySelector(${selectorLiteral("appearance-radio")})) ||
+    const settings = Boolean(document.querySelector(${selectorLiteral("settings-panel")})) ||
+      Boolean(document.querySelector(${selectorLiteral("appearance-radio")})) ||
       Boolean(document.querySelector(${stableTestidLiteral("theme-preview")}));
+    const generic = Boolean(document.querySelector('main, [role="main"]')) &&
+      Boolean(document.querySelector('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]')) &&
+      Boolean(document.querySelector(${stableTestidLiteral("app-shell-header-context-menu-surface")}));
+    markers.generic = generic;
     return {
       title: document.title,
       href: location.href,
       markers,
       codex: location.protocol === 'app:' &&
-        ((markers.shell && markers.sidebar) || settings || markers.main),
+        ((markers.shell && markers.sidebar) || settings || markers.main || generic),
     };
   })()`);
 }
@@ -945,6 +960,10 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
     const shell = box(document.querySelector(${selectorLiteral("shell-main")}));
     const composer = box(document.querySelector(${selectorLiteral("composer-chrome")}));
     const sidebar = box(document.querySelector(${selectorLiteral("left-panel")}));
+    const header = box(document.querySelector(${selectorLiteral("header-tint")}));
+    const settingsAnchor = box(document.querySelector(${selectorLiteral("settings-panel")}) ||
+      document.querySelector(${selectorLiteral("appearance-radio")}) ||
+      document.querySelector(${stableTestidLiteral("theme-preview")}));
     const runtime = window.__CODEX_AURORA_SKIN_STATE__;
     const adopted = runtime?.styleMode === 'adopted' &&
       [...document.adoptedStyleSheets].includes(runtime.styleSheet);
@@ -972,14 +991,15 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
       shell,
       composer,
       sidebar,
+      header,
+      settingsAnchor,
       viewport: { width: innerWidth, height: innerHeight },
       documentOverflow: {
         x: document.documentElement.scrollWidth > document.documentElement.clientWidth,
         y: document.documentElement.scrollHeight > document.documentElement.clientHeight,
       },
     };
-    const structurePass = result.scope?.level === 'L0' ||
-      (Boolean(result.shell?.visible) && Boolean(result.sidebar?.visible));
+    const structurePass = (${structurePassFor.toString()})(result);
     const basePass = result.installed && result.version === ${JSON.stringify(SKIN_VERSION)} &&
       result.stylePresent && result.businessClassPollution === 0 && structurePass &&
       !result.documentOverflow.x;
@@ -1212,9 +1232,13 @@ export function earlyPayloadFor(payload, revision) {
       const shell = document.querySelector(${selectorLiteral("shell-main")});
       const sidebar = document.querySelector(${selectorLiteral("left-panel")});
       const main = document.querySelector(${selectorLiteral("home-route")});
-      const settings = document.querySelector(${selectorLiteral("appearance-radio")}) ||
+      const settings = document.querySelector(${selectorLiteral("settings-panel")}) ||
+        document.querySelector(${selectorLiteral("appearance-radio")}) ||
         document.querySelector(${stableTestidLiteral("theme-preview")});
-      return Boolean((shell && sidebar) || settings || main);
+      const generic = document.querySelector('main, [role="main"]') &&
+        document.querySelector('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]') &&
+        document.querySelector(${stableTestidLiteral("app-shell-header-context-menu-surface")});
+      return Boolean((shell && sidebar) || settings || main || generic);
     };
     const install = () => {
       if (window[generationKey] !== generation) { stop(); return true; }
