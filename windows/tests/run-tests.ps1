@@ -1235,6 +1235,10 @@ try {
   if (-not $verifyScriptSource.Contains('Get-AuroraSkinVerifiedCdpIdentityForAnyRegistered')) {
     throw 'Verify lost the any-registered endpoint fallback for Store auto-updates.'
   }
+  if (-not $verifyScriptSource.Contains(
+      ". (Join-Path `$PSScriptRoot 'theme-windows.ps1')")) {
+    throw 'Verify must load theme-windows.ps1 before resolving the staged active theme.'
+  }
   foreach ($verifyCaller in @(
     @{ Name = 'start-aurora-skin.ps1'; Source = $startSource },
     @{ Name = 'verify-aurora-skin.ps1'; Source = $verifyScriptSource }
