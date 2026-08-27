@@ -1,20 +1,28 @@
 # Codex Aurora Skin
 
+[English](./README.en.md) | 简体中文
+
 Codex Aurora Skin 是面向 Windows、macOS 与 Linux 的非官方 Codex 桌面主题管理器。
 它通过仅监听回环地址的 CDP 会话注入背景样式，不修改 Codex 应用文件、
 账号、模型配置、插件或任务数据。
 
 > 本项目与 OpenAI 无隶属、赞助或背书关系。
 
-## 下载
+## 下载与安装
 
 从 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases)
 下载对应平台的公开安装包：
 
 - Windows：`CodexAuroraSkin-Setup-v*.exe`
 - macOS：`CodexAuroraSkin-v*.dmg`
-- Linux：`CodexAuroraSkin-v*-linux.tar.gz`、`.deb` 或 `.rpm`
+- Linux 预览版：`CodexAuroraSkin-v*-linux.tar.gz`、`.deb` 或 `.rpm`
 - 校验文件：`SHA256SUMS.txt`
+
+不同版本包含的公开构件可能不同，请以对应 Release 的 Assets 列表为准。Linux
+首版代码已合入 `main`，安装包发布在
+[Linux v1.0.1 预览版](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.1)；
+也可以按下文从源码安装。Linux 包尚未完成全部受支持发行版和 ARM64 实机验收，
+因此当前作为预览版提供。
 
 公开构件目前未使用商业代码签名。macOS App 使用 ad-hoc 签名且未经 Apple
 公证，首次打开时需要在“系统设置 → 隐私与安全性”中确认“仍要打开”。
@@ -36,6 +44,40 @@ Codex 26.810 的新版主区域、Header 与 Composer 结构，并改善 macOS �
 
 详细步骤和数据目录见 [macOS 安装说明](./docs/install-macos.md)。安全提示参考
 [Apple 官方说明](https://support.apple.com/zh-cn/102445)。
+
+### Linux 首次使用
+
+Linux 版用于官方 ChatGPT Linux 桌面端中的 Codex 工作区。请先通过系统包管理器
+安装官方 `chatgpt` 软件包，再执行：
+
+```bash
+git clone https://github.com/Entropy-R/Codex-Aurora-Skin.git
+cd Codex-Aurora-Skin
+./linux/scripts/install-aurora-skin-linux.sh
+```
+
+安装器只写入当前用户的 XDG 数据目录，不修改 ChatGPT 的安装文件，也不创建
+登录启动项或 systemd 服务。安装完成后会自动打开管理器；以后可以从应用菜单
+启动 “Codex Aurora Skin”，或运行：
+
+```bash
+~/.local/bin/codex-aurora-skin
+```
+
+在管理器中点击“导入主题”可导入 PNG、JPEG 或 WebP 图片，选择主题并点击应用后，
+按提示允许重启 ChatGPT。用户主题默认保存在
+`~/.local/share/codex-aurora-skin/state/themes`。该目录中的每个子目录都是包含
+`theme.json`、背景图和缩略图的完整主题包，不应只把原始图片复制进去。
+
+需要结束主题会话时，在管理器中选择“恢复官方外观”，或运行：
+
+```bash
+~/.local/bin/codex-aurora-skin-restore --restart-chatgpt
+```
+
+支持的发行版、源码安装选项、DEB/RPM/TAR 构建和诊断命令见
+[Linux 安装说明](./docs/install-linux.md)与
+[Linux 版 README](./linux/README.md)。
 
 ## 主题管理器
 

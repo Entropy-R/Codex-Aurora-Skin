@@ -1,5 +1,7 @@
 # Codex Aurora Skin
 
+English | [简体中文](./README.md)
+
 Codex Aurora Skin is an unofficial theme manager for the Codex workspace in the
 ChatGPT desktop app on Windows, macOS, and Linux. It injects background styling
 through a loopback-only CDP session. It does not modify the Codex application,
@@ -7,15 +9,23 @@ account data, model configuration, plugins, or tasks.
 
 > This project is not affiliated with, sponsored by, or endorsed by OpenAI.
 
-## Downloads
+## Downloads and installation
 
 Download the public package for your platform from
 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases):
 
 - Windows: `CodexAuroraSkin-Setup-v*.exe`
 - macOS: `CodexAuroraSkin-v*.dmg`
-- Linux: `CodexAuroraSkin-v*-linux.tar.gz`, `.deb`, or `.rpm`
+- Linux preview: `CodexAuroraSkin-v*-linux.tar.gz`, `.deb`, or `.rpm`
 - Checksums: `SHA256SUMS.txt`
+
+Public assets vary by release; use the Assets list of the selected release as
+the source of truth. The initial Linux implementation is available on `main`,
+with packages in the
+[Linux v1.0.1 preview](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.1).
+You can also install it from source as described below. The Linux packages are
+published as a preview because validation on every supported distribution and
+ARM64 hardware is not complete.
 
 The public artifacts do not currently use commercial code signing. The macOS
 app has an ad-hoc signature and is not notarized by Apple, so its first launch
@@ -34,6 +44,44 @@ for updates online.
 
 See the [macOS installation guide](./docs/install-macos.md) and
 [Apple's official safety guidance](https://support.apple.com/en-us/102445).
+
+### First use on Linux
+
+The Linux version themes the Codex workspace in the official ChatGPT Linux
+desktop app. Install the official `chatgpt` package through your system package
+manager first, then run:
+
+```bash
+git clone https://github.com/Entropy-R/Codex-Aurora-Skin.git
+cd Codex-Aurora-Skin
+./linux/scripts/install-aurora-skin-linux.sh
+```
+
+The installer writes only to the current user's XDG data directories. It does
+not modify ChatGPT installation files or create a login item or systemd
+service. The manager opens automatically after installation. To launch it
+again, use the **Codex Aurora Skin** application menu entry or run:
+
+```bash
+~/.local/bin/codex-aurora-skin
+```
+
+Use **Import theme** in the manager to import a PNG, JPEG, or WebP image. Select
+a theme, apply it, and approve the ChatGPT restart when prompted. User themes
+are stored in `~/.local/share/codex-aurora-skin/state/themes` by default. Each
+subdirectory is a complete theme pack containing `theme.json`, a background,
+and a thumbnail; copying only a raw image into that directory is not supported.
+
+Use **Restore official appearance** in the manager to end the themed session,
+or run:
+
+```bash
+~/.local/bin/codex-aurora-skin-restore --restart-chatgpt
+```
+
+See the [Linux installation guide](./docs/install-linux.md) and
+[Linux README](./linux/README.md) for supported distributions, source install
+options, TAR/DEB/RPM builds, and diagnostics.
 
 ## Theme manager
 
