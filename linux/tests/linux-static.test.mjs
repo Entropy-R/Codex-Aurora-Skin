@@ -38,6 +38,7 @@ assert.match(installer, /拒绝覆盖无关/);
 
 const releaseBuilder = read("installer/build-release.sh");
 assert.match(releaseBuilder, /--owner=0 --group=0 --numeric-owner/);
+assert.match(releaseBuilder, /_buildhost codex-aurora-skin-builder/);
 
 const fixtureTool = fs.readFileSync(path.join(repositoryRoot, "tools", "capture-dom-fixture.mjs"), "utf8");
 const doctorTool = fs.readFileSync(path.join(repositoryRoot, "tools", "doctor-selectors.mjs"), "utf8");

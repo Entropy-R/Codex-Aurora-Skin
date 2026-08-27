@@ -47,6 +47,7 @@ if command -v rpmbuild >/dev/null 2>&1; then
   cp "$SCRIPT_DIR/debian/"*.desktop "$RPM_TOP/SOURCES/"
   cp "$SCRIPT_DIR/rpm/codex-aurora-skin.spec" "$RPM_TOP/SPECS/"
   rpmbuild -bb --define "_topdir $RPM_TOP" \
+    --define "_buildhost codex-aurora-skin-builder" \
     "$RPM_TOP/SPECS/codex-aurora-skin.spec" >/dev/null
   while IFS= read -r rpm_path; do
     target="$OUTPUT_ROOT/$(basename "$rpm_path")"
