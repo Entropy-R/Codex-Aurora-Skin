@@ -1,6 +1,6 @@
 # Codex Aurora Skin
 
-Codex Aurora Skin 是面向 Windows 与 macOS 的非官方 Codex 桌面主题管理器。
+Codex Aurora Skin 是面向 Windows、macOS 与 Linux 的非官方 Codex 桌面主题管理器。
 它通过仅监听回环地址的 CDP 会话注入背景样式，不修改 Codex 应用文件、
 账号、模型配置、插件或任务数据。
 
@@ -13,6 +13,7 @@ Codex Aurora Skin 是面向 Windows 与 macOS 的非官方 Codex 桌面主题管
 
 - Windows：`CodexAuroraSkin-Setup-v*.exe`
 - macOS：`CodexAuroraSkin-v*.dmg`
+- Linux：`CodexAuroraSkin-v*-linux.tar.gz`、`.deb` 或 `.rpm`
 - 校验文件：`SHA256SUMS.txt`
 
 公开构件目前未使用商业代码签名。macOS App 使用 ad-hoc 签名且未经 Apple
@@ -84,12 +85,21 @@ swift test --package-path macos/menubar-app
 ./macos/scripts/build-dmg.sh --skip-tests
 ```
 
+Linux 回归与构建：
+
+```bash
+./linux/tests/run-tests.sh
+./linux/scripts/doctor-linux.sh
+./linux/installer/build-release.sh
+```
+
 详细安装说明见
-[Windows](./docs/install-windows.md) 与 [macOS](./docs/install-macos.md)。
+[Windows](./docs/install-windows.md)、[macOS](./docs/install-macos.md) 与
+[Linux](./docs/install-linux.md)。
 
 ## 开发路线图
 
-Windows、macOS 和共用模块的 BUG 修复、优化与新增开发项统一维护在
+Windows、macOS、Linux 和共用模块的 BUG 修复、优化与新增开发项统一维护在
 [开发路线图](./docs/ROADMAP.md)。后续工作以其中的优先级、目标版本和验收标准
 为依据。跨设备接续、版本集成分支和单问题修复分支的使用方式见
 [开发与分支流程](./docs/DEVELOPMENT_WORKFLOW.md)。切换到 Windows 电脑继续

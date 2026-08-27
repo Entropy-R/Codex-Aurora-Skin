@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Codex Aurora Skin · DOM 结构快照工具（macOS / Windows 双端通用）
+ * Codex Aurora Skin · DOM 结构快照工具（Windows / macOS / Linux 通用）
  * ================================================================
  * 从一个正在运行、带本机 CDP 调试端口的官方 Codex 桌面端导出
  * 「脱敏 DOM 结构快照」（fixture），用于：
- *   1. 对比 macOS / Windows 同版本 DOM 是否同源（结构 / data-testid / CSS Modules 类名）
+ *   1. 对比三平台同版本 DOM 是否同源（结构 / data-testid / CSS Modules 类名）
  *   2. 离线回归：Codex 升级后在快照上批量验证皮肤选择器（doctor / CI）
  *
- * 用法（两端完全相同，需 Node >= 22）：
+ * 用法（三平台相同，需 Node >= 22）：
  *   node capture-dom-fixture.mjs                     # 单次快照：抓当前屏幕状态
  *   node capture-dom-fixture.mjs --watch             # 巡游模式：挂着脚本，你在 app 里点一圈，
  *                                                    #   每个新状态（路由/菜单/明暗…）自动抓一份，
@@ -17,7 +17,8 @@
  *   node capture-dom-fixture.mjs --wait 45           # 等待 Codex 就绪的秒数（默认 30）
  *
  * 前提：Codex 需带 --remote-debugging-port 启动（Aurora Skin 启动器默认如此；
- *       mac 默认端口 9341，Windows 默认 9335，被占用时会自动偏移，本脚本会扫描）。
+ *       macOS/Linux 默认端口 9341，Windows 默认 9335，被占用时会自动偏移，
+ *       本脚本会扫描）。
  *
  * 隐私边界（脚本对页面只读，不写入任何内容）：
  *   - 不采集任何文本内容（仅记录「该节点是否含直接文本」的布尔值）
@@ -343,7 +344,7 @@ async function fetchJson(port, pathname, timeoutMs = 900) {
   }
 }
 
-/** 读取双端 Aurora Skin 状态文件里记录的实际端口（端口被占用时会偏移）。 */
+/** 读取各平台 Aurora Skin 状态文件里记录的实际端口（端口被占用时会偏移）。 */
 async function stateFilePorts() {
   const files = [];
   if (process.platform === "darwin") {
@@ -356,6 +357,9 @@ async function stateFilePorts() {
         if (entry.endsWith(".json")) files.push(path.join(root, entry));
       }
     } catch {}
+  } else if (process.platform === "linux") {
+    const dataRoot = process.env.XDG_DATA_HOME || path.join(os.homedir(), ".local", "share");
+    files.push(path.join(dataRoot, "codex-aurora-skin", "state", "state.json"));
   }
   const ports = [];
   for (const file of files.slice(0, 12)) {
@@ -684,6 +688,7 @@ async function main() {
       "未发现可用的 CDP 端口。请先用 Aurora Skin 启动器启动 Codex：\n" +
       "  macOS   : ~/.codex/codex-aurora-skin/scripts/start-aurora-skin-macos.sh（或仓库 macos/scripts/ 下同名脚本）\n" +
       "  Windows : powershell -File .\\windows\\scripts\\start-aurora-skin.ps1\n" +
+      "  Linux   : ./linux/scripts/start-aurora-skin-linux.sh\n" +
       "或手动: <Codex 可执行文件> --remote-debugging-address=127.0.0.1 --remote-debugging-port=9341\n" +
       "然后重跑本脚本（可用 --port 指定端口，--wait 延长等待）。",
     );
@@ -749,7 +754,7 @@ async function main() {
 
   for (const entry of captured) printTargetSummary(entry);
   console.log(`\n→ 已写入 ${outFile}（${(body.length / 1024 / 1024).toFixed(2)} MB）`);
-  console.log("下一步: 把该 JSON 文件发回分析方；另一平台运行同一脚本后对比两份快照。");
+  console.log("下一步: 把该 JSON 文件发回分析方；其他平台运行同一脚本后对比快照。");
 }
 
 process.on("unhandledRejection", (reason) => {

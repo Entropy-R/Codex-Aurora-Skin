@@ -32,6 +32,7 @@ function extractVersion(relativePath, pattern, label) {
 const expected = readVersion("macos/VERSION");
 const versions = new Map([
   ["windows/VERSION", readVersion("windows/VERSION")],
+  ["linux/VERSION", readVersion("linux/VERSION")],
   ["macos/package.json", JSON.parse(read("macos/package.json")).version],
   [
     "macos/scripts/common-macos.sh",

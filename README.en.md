@@ -1,9 +1,9 @@
 # Codex Aurora Skin
 
-Codex Aurora Skin is an unofficial theme manager for the Codex desktop app on
-Windows and macOS. It injects background styling through a loopback-only CDP
-session. It does not modify the Codex application, account data, model
-configuration, plugins, or tasks.
+Codex Aurora Skin is an unofficial theme manager for the Codex workspace in the
+ChatGPT desktop app on Windows, macOS, and Linux. It injects background styling
+through a loopback-only CDP session. It does not modify the Codex application,
+account data, model configuration, plugins, or tasks.
 
 > This project is not affiliated with, sponsored by, or endorsed by OpenAI.
 
@@ -14,6 +14,7 @@ Download the public package for your platform from
 
 - Windows: `CodexAuroraSkin-Setup-v*.exe`
 - macOS: `CodexAuroraSkin-v*.dmg`
+- Linux: `CodexAuroraSkin-v*-linux.tar.gz`, `.deb`, or `.rpm`
 - Checksums: `SHA256SUMS.txt`
 
 The public artifacts do not currently use commercial code signing. The macOS
@@ -70,12 +71,13 @@ follow the official Codex light/dark appearance.
   normally.
 
 See the [Windows](./docs/install-windows.md) and
-[macOS](./docs/install-macos.md) installation guides.
+[macOS](./docs/install-macos.md) and
+[Linux](./docs/install-linux.md) installation guides.
 
 ## Development roadmap
 
-Bug fixes, optimizations, and new development work for Windows, macOS, and
-shared modules are maintained in the unified
+Bug fixes, optimizations, and new development work for Windows, macOS, Linux,
+and shared modules are maintained in the unified
 [development roadmap](./docs/ROADMAP.md). Its priorities, target versions, and
 acceptance criteria define the follow-up work. Cross-device handoff and release
 integration branch rules are documented in the

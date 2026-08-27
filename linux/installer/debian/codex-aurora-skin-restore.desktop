@@ -1,0 +1,9 @@
+# CodexAuroraSkin launcher
+[Desktop Entry]
+Type=Application
+Name=Codex Aurora Skin - 恢复官方外观
+Comment=移除实时皮肤并正常重启 ChatGPT
+Exec=/opt/codex-aurora-skin/scripts/restore-aurora-skin-linux.sh --restart-chatgpt
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Utility;

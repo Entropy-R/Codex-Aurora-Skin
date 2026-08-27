@@ -1,4 +1,4 @@
-# 双平台架构
+# 三平台架构
 
 ## 共享层
 
@@ -10,7 +10,8 @@
 目录，不随引擎升级覆盖。
 
 `runtime/` 是 CSS、渲染器与选择器契约的唯一源文件；运行
-`node tools/sync-runtime-assets.mjs` 同步到两个平台的 `assets/`。
+`node tools/sync-runtime-assets.mjs` 同步 Windows/macOS 的 `assets/`，Linux
+发行构件在组装时复用相同的已编译资源。
 
 ## Windows
 
@@ -27,6 +28,15 @@
 - 不常驻菜单栏，不安装 SwiftBar 或登录项；
 - 用户状态位于
   `~/Library/Application Support/CodexAuroraSkin`。
+
+## Linux
+
+- 适配官方 `chatgpt` DEB/RPM 包中的 ChatGPT 桌面端和 Codex 工作区；
+- 通过包管理器记录、关键文件摘要、架构及普通用户不可写属性验证运行时；
+- 使用官方包内 `resources/cua_node/bin/node`，不依赖系统 Node.js；
+- 通过 `/proc` 可执行文件身份和监听端口共同验证回环 CDP 所有权；
+- 用户级引擎和主题遵循 XDG 数据目录，日志遵循 XDG 状态目录；
+- 不安装 systemd 服务、不创建登录启动项，也不修改 `/usr/lib/chatgpt`。
 
 ## 主题与外观
 

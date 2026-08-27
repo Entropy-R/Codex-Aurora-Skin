@@ -10,7 +10,11 @@ import { readImageMetadata } from "./image-metadata.mjs";
 const execFileAsync = promisify(execFile);
 const scriptPath = fileURLToPath(import.meta.url);
 const here = path.dirname(scriptPath);
-const root = path.resolve(here, "..");
+// Linux 复用同一注入协议，但把编译后的共享资源放在自己的引擎目录中。
+// 未设置该变量时保持原有 macOS 目录行为。
+const root = process.env.CODEX_AURORA_SKIN_ASSETS_ROOT
+  ? path.resolve(process.env.CODEX_AURORA_SKIN_ASSETS_ROOT, "..")
+  : path.resolve(here, "..");
 const SELECTOR_CONTRACT = JSON.parse(await fs.readFile(
   path.join(root, "assets", "selectors.json"), "utf8",
 ));
@@ -1955,9 +1959,9 @@ async function runOneShotAndExit(options) {
   process.exit(process.exitCode ?? 0);
 }
 
-if (path.resolve(process.argv[1] || "") === path.resolve(scriptPath)) {
+export async function main(argv = process.argv.slice(2)) {
   try {
-    const options = parseArgs(process.argv.slice(2));
+    const options = parseArgs(argv);
     if (options.mode === "check") {
       const loaded = await loadPayload(options.themeDir);
       console.log(JSON.stringify({
@@ -1984,4 +1988,8 @@ if (path.resolve(process.argv[1] || "") === path.resolve(scriptPath)) {
     console.error(`[aurora-skin] ${error.stack || error.message}`);
     process.exitCode = 1;
   }
+}
+
+if (path.resolve(process.argv[1] || "") === path.resolve(scriptPath)) {
+  await main();
 }
