@@ -9,6 +9,18 @@ account data, model configuration, plugins, or tasks.
 
 > This project is not affiliated with, sponsored by, or endorsed by OpenAI.
 
+![Codex Aurora Skin with a snowy background](./docs/images/screenshot-windows-snow-public.png)
+
+## Screenshots
+
+The theme affects the background layer and interface surfaces without applying
+image filters to text, buttons, icons, or native controls.
+
+![Codex Aurora Skin theme manager](./docs/images/screenshot-theme-manager.png)
+
+> User-imported images shown in these screenshots are examples only. They are
+> not included in the repository or installer.
+
 ## Downloads and installation
 
 Download the public package for your platform from
@@ -32,6 +44,12 @@ app has an ad-hoc signature and is not notarized by Apple, so its first launch
 requires explicit approval in System Settings > Privacy & Security. The product
 starts only when requested, does not create a login item, and does not check
 for updates online.
+
+Version `v1.0.1` fixes the composer overflow in some window sizes, supports the
+Codex 26.810 main-area, header, and composer structure, and improves manager
+heartbeat and theme reconnection after macOS sleep. The browser manager now
+prompts users to reopen the app instead of showing `Failed to fetch` when it is
+disconnected.
 
 ### First use on macOS
 
@@ -118,8 +136,8 @@ follow the official Codex light/dark appearance.
 - Restore stops the injector, closes the CDP session, and relaunches Codex
   normally.
 
-See the [Windows](./docs/install-windows.md) and
-[macOS](./docs/install-macos.md) and
+See the [Windows](./docs/install-windows.md),
+[macOS](./docs/install-macos.md), and
 [Linux](./docs/install-linux.md) installation guides.
 
 ## Development roadmap

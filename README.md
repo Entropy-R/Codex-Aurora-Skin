@@ -8,6 +8,16 @@ Codex Aurora Skin 是面向 Windows、macOS 与 Linux 的非官方 Codex 桌面�
 
 > 本项目与 OpenAI 无隶属、赞助或背书关系。
 
+![Codex Aurora Skin 雪景主题效果](./docs/images/screenshot-windows-snow-public.png)
+
+## 效果展示
+
+主题只作用于背景层和界面面板，不会对文字、按钮、图标或原生控件套用图片滤镜。
+
+![Codex Aurora Skin 主题管理器](./docs/images/screenshot-theme-manager.png)
+
+> 截图中的用户导入图片仅用于演示，不包含在仓库或安装包中。
+
 ## 下载与安装
 
 从 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases)
