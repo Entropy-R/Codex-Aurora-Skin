@@ -1,0 +1,12 @@
+Package: codex-aurora-skin
+Version: 1.0.1
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Entropy-R <Entropy-R@users.noreply.github.com>
+Depends: chatgpt, bash, coreutils, iproute2, xdg-utils
+Homepage: https://github.com/Entropy-R/Codex-Aurora-Skin
+Description: Local theme manager for ChatGPT Codex on Linux
+ Codex Aurora Skin injects a local visual theme through a loopback-only
+ Chrome DevTools Protocol session. It does not modify ChatGPT application
+ files, account data, model settings, plugins, or task data.

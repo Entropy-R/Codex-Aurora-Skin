@@ -163,6 +163,9 @@ async function stateFilePorts() {
     files.push(path.join(os.homedir(), "Library/Application Support/CodexAuroraSkin/state.json"));
   } else if (process.platform === "win32" && process.env.LOCALAPPDATA) {
     files.push(path.join(process.env.LOCALAPPDATA, "CodexAuroraSkin", "state.json"));
+  } else if (process.platform === "linux") {
+    const dataRoot = process.env.XDG_DATA_HOME || path.join(os.homedir(), ".local", "share");
+    files.push(path.join(dataRoot, "codex-aurora-skin", "state", "state.json"));
   }
   const ports = [];
   for (const file of files) {

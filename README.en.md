@@ -1,68 +1,49 @@
-<div align="center">
-
 # Codex Aurora Skin
 
-Managed, reversible, immersive background themes for the Codex desktop app.
+English | [简体中文](./README.md)
 
-[简体中文](./README.md) ·
-[Download](https://github.com/Entropy-R/Codex-Aurora-Skin/releases) ·
-[Windows guide](./docs/install-windows.md) ·
-[Project documentation](./docs/PROJECT.md)
+Codex Aurora Skin is an unofficial theme manager for the Codex workspace in the
+ChatGPT desktop app on Windows, macOS, and Linux. It injects background styling
+through a loopback-only CDP session. It does not modify the Codex application,
+account data, model configuration, plugins, or tasks.
 
-</div>
+> This project is not affiliated with, sponsored by, or endorsed by OpenAI.
 
 ![Codex Aurora Skin with a snowy background](./docs/images/screenshot-windows-snow-public.png)
 
-> [!IMPORTANT]
-> This is an unofficial community project. It is not affiliated with,
-> sponsored by, or endorsed by OpenAI. It does not modify the official Codex
-> installation, account data, model configuration, plugins, or tasks.
-
-## Overview
-
-Codex Aurora Skin is a local theme manager for the Codex desktop app. It
-injects background styles through a loopback-only CDP session, blending the
-main view, task pages, and composer with a user-selected image while preserving
-the official interface and its light/dark appearance.
-
-- Import PNG, JPEG, and WebP images locally.
-- Tune brightness, background dimming, and surface strength independently for
-  light and dark appearances.
-- Browse, apply, rename, and delete user themes.
-- Keep built-in themes read-only and preserve user themes across upgrades and
-  default uninstall.
-- Restore the official appearance and close the CDP session at any time.
-- Create no login item and perform no online update checks.
-
 ## Screenshots
 
-### Codex desktop
-
-The hero image above shows the theme running in the Codex main view. The theme
-affects the background layer and interface surfaces without applying image
-filters to text, buttons, icons, or native controls.
-
-### Local theme manager
-
-The manager keeps built-in and imported themes together and stores separate
-controls for the light and dark appearances.
+The theme affects the background layer and interface surfaces without applying
+image filters to text, buttons, icons, or native controls.
 
 ![Codex Aurora Skin theme manager](./docs/images/screenshot-theme-manager.png)
 
 > User-imported images shown in these screenshots are examples only. They are
 > not included in the repository or installer.
 
-## Platform and release status
+## Downloads and installation
 
-| Platform | Status | Distribution |
-| --- | --- | --- |
-| Windows 10/11 | Released | Download `CodexAuroraSkin-Setup-v*.exe` from Releases |
-| macOS | Released | Download `CodexAuroraSkin-v*.dmg` from Releases |
+Download the public package for your platform from
+[GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases):
 
-Public artifacts do not currently use commercial code signing. The macOS app has
-an ad-hoc signature and is not notarized by Apple, so its first launch requires
-explicit approval in System Settings > Privacy & Security. Verify the installer
-against the `SHA256SUMS.txt` file included with its GitHub Release.
+- Windows: `CodexAuroraSkin-Setup-v*.exe`
+- macOS: `CodexAuroraSkin-v*.dmg`
+- Linux preview: `CodexAuroraSkin-v*-linux.tar.gz`, `.deb`, or `.rpm`
+- Checksums: `SHA256SUMS.txt`
+
+Public assets vary by release; use the Assets list of the selected release as
+the source of truth. The initial Linux implementation is available on `main`,
+with packages in the
+[Linux v1.0.1 preview](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.1).
+You can also install it from source as described below. The Linux packages are
+published as a preview because validation on every supported distribution and
+ARM64 hardware is not complete.
+
+The public artifacts do not currently use commercial code signing. The macOS
+app has an ad-hoc signature and is not notarized by Apple, so its first launch
+requires explicit approval in System Settings > Privacy & Security. The product
+starts only when requested, does not create a login item, and does not check
+for updates online.
 
 Version `v1.0.1` fixes the composer overflow in some window sizes, supports the
 Codex 26.810 main-area, header, and composer structure, and improves manager
@@ -82,86 +63,88 @@ disconnected.
 See the [macOS installation guide](./docs/install-macos.md) and
 [Apple's official safety guidance](https://support.apple.com/en-us/102445).
 
-## Quick start
+### First use on Linux
 
-1. Download the Windows installer and checksum file from
-   [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases).
-2. Verify the installer's SHA-256, then run it.
-3. Launch **Codex Aurora Skin**. The local-only theme manager opens in your
-   browser.
-4. Select a built-in theme or import an image, adjust its controls, and choose
-   **Apply theme**.
-5. Choose **Restore official appearance** when you want to end the themed
-   session.
+The Linux version themes the Codex workspace in the official ChatGPT Linux
+desktop app. Install the official `chatgpt` package through your system package
+manager first, then run:
 
-See the [Windows installation guide](./docs/install-windows.md) for complete
-steps, state directories, and uninstall behavior.
+```bash
+git clone https://github.com/Entropy-R/Codex-Aurora-Skin.git
+cd Codex-Aurora-Skin
+./linux/scripts/install-aurora-skin-linux.sh
+```
 
-## Theme controls
+The installer writes only to the current user's XDG data directories. It does
+not modify ChatGPT installation files or create a login item or systemd
+service. The manager opens automatically after installation. To launch it
+again, use the **Codex Aurora Skin** application menu entry or run:
 
-| Control | Dark appearance | Light appearance | Effect |
-| --- | --- | --- | --- |
-| Image brightness | `0.35–1.20` | `0.35–1.20` | Background image only |
-| Background dimming | `0–0.70` | `0.32–0.70` | Maintains foreground contrast |
-| Surface strength | `0.20–1.00` | `0.60–1.00` | Changes panel translucency |
+```bash
+~/.local/bin/codex-aurora-skin
+```
 
-Themes always use `appearance: auto` and follow the official Codex light or
-dark appearance.
+Use **Import theme** in the manager to import a PNG, JPEG, or WebP image. Select
+a theme, apply it, and approve the ChatGPT restart when prompted. User themes
+are stored in `~/.local/share/codex-aurora-skin/state/themes` by default. Each
+subdirectory is a complete theme pack containing `theme.json`, a background,
+and a thumbnail; copying only a raw image into that directory is not supported.
+
+Use **Restore official appearance** in the manager to end the themed session,
+or run:
+
+```bash
+~/.local/bin/codex-aurora-skin-restore --restart-chatgpt
+```
+
+See the [Linux installation guide](./docs/install-linux.md) and
+[Linux README](./linux/README.md) for supported distributions, source install
+options, TAR/DEB/RPM builds, and diagnostics.
+
+## Theme manager
+
+The local Simplified Chinese manager provides:
+
+- separate built-in and user theme libraries;
+- independent light/dark brightness, background dimming, and surface-strength controls;
+- local PNG, JPEG, and WebP imports with browser-generated thumbnails;
+- apply, rename, and delete operations for user themes;
+- explicit confirmation before restarting Codex for a CDP session;
+- complete restoration of the official appearance.
+
+The offline catalog contains the original Red & White Abstract preset.
+Built-in themes are read-only. User themes and overrides remain in the
+platform state directory across upgrades and default uninstall.
+
+Brightness ranges from `0.35` to `1.20`. In dark mode, background dimming ranges
+from `0` to `0.70` and surface strength from `0.20` to `1.00`; light mode uses
+safe minimums of `0.32` and `0.60` respectively for text contrast. Image controls affect
+only the background layer, while surface strength changes panel translucency
+without filtering text or icons. Themes always use `appearance: auto` and
+follow the official Codex light/dark appearance.
 
 ## Security boundary
 
 - The manager binds only to `127.0.0.1` on an ephemeral port.
 - Each launch creates a random 256-bit token and validates Host, Origin, and
   Bearer authentication.
-- The page enables a strict CSP and `Referrer-Policy: no-referrer`.
-- Imports are limited to 16 MB, 16384 px per side, and 50 megapixels.
+- Strict CSP and `Referrer-Policy: no-referrer` are enabled.
+- Imports are limited to 16 MB, 16384px per side, and 50 megapixels.
 - Theme and override updates use staging and atomic replacement.
-- The manager exits after 120 seconds without an authenticated client.
+- The manager exits after 120 seconds without an authenticated client; the
+  independent injector keeps the current theme active.
 - Restore stops the injector, closes the CDP session, and relaunches Codex
   normally.
 
-## Development and verification
+See the [Windows](./docs/install-windows.md),
+[macOS](./docs/install-macos.md), and
+[Linux](./docs/install-linux.md) installation guides.
 
-Repository layout:
+## Development roadmap
 
-```text
-manager/   Local theme service and web interface
-runtime/   Shared styles and renderer injection
-windows/   Windows installation, launch, restore, and tests
-macos/     macOS source, scripts, and tests
-library/   Offline built-in theme catalog
-docs/      Installation and project documentation
-tools/     Consistency checks and development utilities
-```
-
-Windows and shared modules:
-
-```powershell
-node --test manager/*.test.mjs
-pwsh -NoProfile -File windows/tests/run-tests.ps1
-pwsh -NoProfile -File windows/tests/installer-static.tests.ps1
-node tools/sync-runtime-assets.mjs --check
-```
-
-The macOS build and regression suite must run on macOS:
-
-```bash
-./macos/tests/run-tests.sh
-swift test --package-path macos/menubar-app
-./macos/scripts/build-dmg.sh --skip-tests
-```
-
-Further reading:
-
-- [Project design](./docs/PROJECT.md)
-- [Windows installation](./docs/install-windows.md)
-- [macOS installation](./docs/install-macos.md)
-- [Platform differences](./docs/platforms.md)
-- [Development roadmap](./docs/ROADMAP.md)
-- [Development workflow](./docs/DEVELOPMENT_WORKFLOW.md)
-- [Windows Codex handoff prompt](./docs/WINDOWS_V1.0.1_HANDOFF_PROMPT.md)
-
-## License
-
-Code is released under the [MIT License](./LICENSE). See [NOTICE](./NOTICE.md)
-for third-party notices.
+Bug fixes, optimizations, and new development work for Windows, macOS, Linux,
+and shared modules are maintained in the unified
+[development roadmap](./docs/ROADMAP.md). Its priorities, target versions, and
+acceptance criteria define the follow-up work. Cross-device handoff and release
+integration branch rules are documented in the
+[development workflow](./docs/DEVELOPMENT_WORKFLOW.md).

@@ -1,0 +1,9 @@
+# CodexAuroraSkin launcher
+[Desktop Entry]
+Type=Application
+Name=Codex Aurora Skin
+Comment=管理 Codex Aurora Skin 本地主题
+Exec=/opt/codex-aurora-skin/scripts/launch-manager-linux.sh
+Icon=preferences-desktop-theme
+Terminal=false
+Categories=Utility;

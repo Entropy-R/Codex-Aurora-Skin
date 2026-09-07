@@ -22,7 +22,11 @@ const ACTIVE_VERIFY_TIMEOUT_MS = 45_000;
 
 function parseArgs(argv) {
   const options = {
-    platform: process.platform === "darwin" ? "macos" : "windows",
+    platform: process.platform === "darwin"
+      ? "macos"
+      : process.platform === "win32"
+        ? "windows"
+        : process.platform === "linux" ? "linux" : process.platform,
     engineRoot: path.resolve(here, ".."),
     stateRoot: null,
     activeRoot: null,
@@ -45,7 +49,9 @@ function parseArgs(argv) {
     else if (arg === "--open") options.open = true;
     else throw new Error(`未知管理器参数：${arg}`);
   }
-  if (!["windows", "macos"].includes(options.platform)) throw new Error("平台参数不受支持");
+  if (!["windows", "macos", "linux"].includes(options.platform)) {
+    throw new Error("平台参数不受支持");
+  }
   for (const [key, value] of Object.entries({
     stateRoot: options.stateRoot,
     activeRoot: options.activeRoot,
@@ -90,7 +96,9 @@ function managerUrl(port, secret = token) {
 }
 
 async function openBrowser(url) {
-  const command = options.platform === "macos" ? "/usr/bin/open" : "explorer.exe";
+  const command = options.platform === "macos"
+    ? "/usr/bin/open"
+    : options.platform === "linux" ? "xdg-open" : "explorer.exe";
   const child = spawn(command, [url], { detached: true, stdio: "ignore", windowsHide: true });
   child.unref();
 }
@@ -181,7 +189,7 @@ async function sessionStatus() {
     });
     if (!response.ok) throw new Error();
     const version = await response.json();
-    if (options.platform === "windows" && state.browserId) {
+    if ((options.platform === "windows" || options.platform === "linux") && state.browserId) {
       const id = /^ws:\/\/(?:127\.0\.0\.1|localhost):\d+\/devtools\/browser\/([A-Za-z0-9._-]+)$/
         .exec(String(version.webSocketDebuggerUrl || ""))?.[1];
       if (id !== state.browserId) throw new Error();
