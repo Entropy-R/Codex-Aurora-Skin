@@ -1116,10 +1116,16 @@ try {
   foreach ($requiredCss in @(
     '--ds-art-brightness',
     'filter: brightness(var(--ds-art-brightness))',
-    'main.main-surface > header.app-header-tint',
+    'data-app-shell-main-surface',
+    'data-app-shell-header-edge-scroll',
+    '[data-aurora-part="main"]',
+    '[data-aurora-part="composer"]',
+    'data-composer-surface-variant',
+    'data-composer-footer-responsive',
+    '_ComposerLayoutBody_',
     '[class~="group/application-menu-top-bar"]',
     '.app-shell-main-content-top-fade',
-    '.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary',
+    ':is(.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary, .thread-scroll-container .bg-gradient-to-t.from-surface.via-surface)',
     '--ds-immersive-composer',
     'var(--ds-art-position)',
     'html[data-aurora-skin="active"]',
@@ -1228,6 +1234,10 @@ try {
   $verifyScriptSource = Read-AuroraSkinUtf8File -Path (Join-Path $Root 'scripts\verify-aurora-skin.ps1')
   if (-not $verifyScriptSource.Contains('Get-AuroraSkinVerifiedCdpIdentityForAnyRegistered')) {
     throw 'Verify lost the any-registered endpoint fallback for Store auto-updates.'
+  }
+  if (-not $verifyScriptSource.Contains(
+      ". (Join-Path `$PSScriptRoot 'theme-windows.ps1')")) {
+    throw 'Verify must load theme-windows.ps1 before resolving the staged active theme.'
   }
   foreach ($verifyCaller in @(
     @{ Name = 'start-aurora-skin.ps1'; Source = $startSource },

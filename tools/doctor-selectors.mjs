@@ -39,7 +39,8 @@ export function gradeDoctorResult(contract, pageResult) {
       error: probe.error || null,
     });
   }
-  const pass = tiers.L1.every((probe) => !probe.required || probe.status === "ok");
+  const pass = pageResult.baseState !== "unknown" &&
+    tiers.L1.every((probe) => !probe.required || probe.status === "ok");
   return {
     schema: "codex-aurora-skin-selector-doctor/1",
     state: pageResult.overlay ? "overlay" : pageResult.baseState,
@@ -65,7 +66,7 @@ export function formatDoctorResult(result) {
   return lines.join("\n");
 }
 
-function pageDoctor(selectors, stableTestids = []) {
+export function pageDoctor(selectors, stableTestids = []) {
   const byKey = new Map(selectors.map((probe) => [probe.key, probe]));
   const evaluated = new Map();
   const evaluate = function (probe) {
@@ -94,10 +95,15 @@ function pageDoctor(selectors, stableTestids = []) {
   // pages and avoids turning optional home probes into a hidden global scan.
   const overlay = count("overlay-menu") > 0 || count("overlay-dialog") > 0 ||
     count("overlay-popper") > 0;
-  let baseState = "thread";
-  if (count("appearance-radio") > 0 || stableTestidCount("theme-preview") > 0) baseState = "settings";
+  let baseState = "unknown";
+  if (count("settings-panel") > 0 || count("appearance-radio") > 0 ||
+    stableTestidCount("theme-preview") > 0) baseState = "settings";
   else if (count("home-icon") > 0 || count("home-route") > 0) baseState = "home";
-  else if (count("shell-main") === 0) baseState = "settings";
+  else {
+    let genericMain = false;
+    try { genericMain = Boolean(document.querySelector('main, [role="main"]')); } catch {}
+    if (count("shell-main") > 0 || genericMain) baseState = "thread";
+  }
 
   const activeScopes = new Set([baseState]);
   if (baseState !== "settings") activeScopes.add("all");

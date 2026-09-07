@@ -50,10 +50,28 @@ README 顶部展示了主题在 Codex 主界面的实际效果。主题只作用
 | 平台 | 状态 | 获取方式 |
 | --- | --- | --- |
 | Windows 10/11 | 已发布 | 从 Releases 下载 `CodexAuroraSkin-Setup-v*.exe` |
-| macOS | 源码与测试保留 | v1.0.0 暂不构建或发布 DMG |
+| macOS | 已发布 | 从 Releases 下载 `CodexAuroraSkin-v*.dmg` |
 
-公开构件目前未使用商业代码签名。下载安装包后，请先核对 Release 中提供的
-`SHA256SUMS.txt`。
+公开构件目前未使用商业代码签名。macOS App 使用 ad-hoc 签名且未经 Apple
+公证，首次打开时需要在“系统设置 → 隐私与安全性”中确认“仍要打开”。
+下载安装包后，请先核对 Release 中提供的 `SHA256SUMS.txt`。
+
+`v1.0.1` 修复了新建任务输入框在部分窗口尺寸下超出可视区域的问题，兼容
+Codex 26.810 的新版主区域、Header 与 Composer 结构，并改善 macOS 休眠唤醒
+后的管理器心跳和皮肤连接恢复。浏览器管理器断开时会提示重新打开 App，不再
+直接显示 `Failed to fetch`。
+
+### macOS 首次使用
+
+1. 打开下载的 DMG，将 “Codex Aurora Skin” 拖入“应用程序”。
+2. 尝试启动一次；如果 macOS 阻止运行，打开“系统设置 → 隐私与安全性”，
+   确认下载文件的 SHA-256 与 Release 一致后选择“仍要打开”。
+3. 再次启动 App，本地主题管理器会在浏览器中打开。
+4. 选择主题并点击应用；首次启用时按提示允许 Codex 重启。
+5. 需要退出主题会话时，在管理器中选择“恢复官方外观”。
+
+详细步骤和数据目录见 [macOS 安装说明](./docs/install-macos.md)。安全提示参考
+[Apple 官方说明](https://support.apple.com/zh-cn/102445)。
 
 ## 快速开始
 
@@ -84,7 +102,8 @@ README 顶部展示了主题在 Codex 主界面的实际效果。主题只作用
 - 页面启用严格 CSP 与 `Referrer-Policy: no-referrer`；
 - 导入图片限制为 16 MB、单边 16384 px、总像素 50 MP；
 - 主题与覆盖值通过临时目录和原子替换提交；
-- 连续 120 秒没有认证客户端后，管理服务自动退出；
+- 连续 120 秒无认证客户端后管理服务退出；系统休眠唤醒会重新给予完整心跳
+  窗口，注入器继续维持并自动恢复当前主题；
 - 恢复操作会停止注入器、关闭 CDP 会话并按官方方式重启 Codex。
 
 ## 开发与验证
@@ -124,6 +143,9 @@ swift test --package-path macos/menubar-app
 - [Windows 安装说明](./docs/install-windows.md)
 - [macOS 安装说明](./docs/install-macos.md)
 - [平台差异](./docs/platforms.md)
+- [开发路线图](./docs/ROADMAP.md)
+- [开发与分支流程](./docs/DEVELOPMENT_WORKFLOW.md)
+- [Windows Codex 接续提示词](./docs/WINDOWS_V1.0.1_HANDOFF_PROMPT.md)
 
 ## 许可证
 

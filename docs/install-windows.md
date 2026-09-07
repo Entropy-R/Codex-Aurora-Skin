@@ -5,16 +5,19 @@
 1. 从 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases)
    下载 `CodexAuroraSkin-Setup-v*.exe` 与 `SHA256SUMS.txt`。
 2. 校验 SHA-256 后运行安装器。
-3. 安装完成页可选择“立即启动”；安装器不会创建登录启动项。
-4. 后续从开始菜单打开“Codex Aurora Skin”。
+3. 在“选择目标位置”页选择程序文件目录。升级安装会默认带出上次目录，但仍可
+   重新选择；请选择当前用户可写的目录。
+4. 安装完成页可选择“立即启动”；安装器不会创建登录启动项。
+5. 后续从开始菜单打开“Codex Aurora Skin”。
 
 管理器首次打开时会初始化离线主题库。如果 Codex 已运行但没有启用主题 CDP，
 管理器会说明原因，并只在你明确确认后重启 Codex。
 
 ## 数据与恢复
 
-运行时与用户数据位于 `%LOCALAPPDATA%\CodexAuroraSkin`。内置资源随升级替换，
-`themes`、`overrides.json` 与当前主题会保留。
+安装器中选择的目录保存启动器和程序文件。运行时状态与用户数据仍位于
+`%LOCALAPPDATA%\CodexAuroraSkin`；内置资源随升级替换，`themes`、
+`overrides.json` 与当前主题会保留。
 
 开始菜单的“恢复官方外观”会停止注入器、关闭主题 CDP 会话并正常重启 Codex。
 卸载也会先执行恢复；用户主题和图片默认保留。

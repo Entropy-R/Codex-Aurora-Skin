@@ -57,10 +57,30 @@ controls for the light and dark appearances.
 | Platform | Status | Distribution |
 | --- | --- | --- |
 | Windows 10/11 | Released | Download `CodexAuroraSkin-Setup-v*.exe` from Releases |
-| macOS | Source and tests retained | v1.0.0 does not build or publish a DMG |
+| macOS | Released | Download `CodexAuroraSkin-v*.dmg` from Releases |
 
-Public artifacts do not currently use commercial code signing. Verify the
-installer against the `SHA256SUMS.txt` file included with its GitHub Release.
+Public artifacts do not currently use commercial code signing. The macOS app has
+an ad-hoc signature and is not notarized by Apple, so its first launch requires
+explicit approval in System Settings > Privacy & Security. Verify the installer
+against the `SHA256SUMS.txt` file included with its GitHub Release.
+
+Version `v1.0.1` fixes the composer overflow in some window sizes, supports the
+Codex 26.810 main-area, header, and composer structure, and improves manager
+heartbeat and theme reconnection after macOS sleep. The browser manager now
+prompts users to reopen the app instead of showing `Failed to fetch` when it is
+disconnected.
+
+### First use on macOS
+
+1. Open the downloaded DMG and drag **Codex Aurora Skin** to **Applications**.
+2. Try to launch it once. If macOS blocks it, verify its SHA-256 against the
+   release, then use **Open Anyway** in System Settings > Privacy & Security.
+3. Launch the app again to open the local theme manager in your browser.
+4. Choose a theme and apply it. Approve the Codex restart when prompted.
+5. Use **Restore official appearance** in the manager to end the themed session.
+
+See the [macOS installation guide](./docs/install-macos.md) and
+[Apple's official safety guidance](https://support.apple.com/en-us/102445).
 
 ## Quick start
 
@@ -137,6 +157,9 @@ Further reading:
 - [Windows installation](./docs/install-windows.md)
 - [macOS installation](./docs/install-macos.md)
 - [Platform differences](./docs/platforms.md)
+- [Development roadmap](./docs/ROADMAP.md)
+- [Development workflow](./docs/DEVELOPMENT_WORKFLOW.md)
+- [Windows Codex handoff prompt](./docs/WINDOWS_V1.0.1_HANDOFF_PROMPT.md)
 
 ## License
 
