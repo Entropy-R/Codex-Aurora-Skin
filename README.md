@@ -19,6 +19,11 @@ Codex Aurora Skin 是面向 Windows 与 macOS 的非官方 Codex 桌面主题管
 公证，首次打开时需要在“系统设置 → 隐私与安全性”中确认“仍要打开”。
 产品只在用户手动启动时运行，不创建登录启动项，也不会联网检查更新。
 
+`v1.0.1` 修复了新建任务输入框在部分窗口尺寸下超出可视区域的问题，兼容
+Codex 26.810 的新版主区域、Header 与 Composer 结构，并改善 macOS 休眠唤醒
+后的管理器心跳和皮肤连接恢复。浏览器管理器断开时会提示重新打开 App，不再
+直接显示 `Failed to fetch`。
+
 ### macOS 首次使用
 
 1. 打开下载的 DMG，将 “Codex Aurora Skin” 拖入“应用程序”。
@@ -58,7 +63,8 @@ Codex Aurora Skin 是面向 Windows 与 macOS 的非官方 Codex 桌面主题管
 - 页面使用严格 CSP，不发送 Referrer；
 - 导入图片限制为 16 MB、单边 16384px、总像素 50MP；
 - 主题与覆盖值通过临时目录和原子替换提交；
-- 连续 120 秒无认证客户端后管理服务退出，注入器继续维持当前主题；
+- 连续 120 秒无认证客户端后管理服务退出；系统休眠唤醒会重新给予完整心跳
+  窗口，注入器继续维持并自动恢复当前主题；
 - 恢复操作会停止注入器、关闭 CDP 会话并按官方方式重启 Codex。
 
 ## 开发验证
@@ -85,4 +91,7 @@ swift test --package-path macos/menubar-app
 
 Windows、macOS 和共用模块的 BUG 修复、优化与新增开发项统一维护在
 [开发路线图](./docs/ROADMAP.md)。后续工作以其中的优先级、目标版本和验收标准
-为依据。
+为依据。跨设备接续、版本集成分支和单问题修复分支的使用方式见
+[开发与分支流程](./docs/DEVELOPMENT_WORKFLOW.md)。切换到 Windows 电脑继续
+`v1.0.1` 时，可复制
+[Windows Codex 接续提示词](./docs/WINDOWS_V1.0.1_HANDOFF_PROMPT.md)。

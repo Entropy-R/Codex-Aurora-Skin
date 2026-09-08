@@ -6,6 +6,7 @@
   const STYLE_REGISTRY_KEY = "__CODEX_AURORA_SKIN_STYLE_SHEETS__";
   const STYLE_ID = "codex-aurora-skin-style";
   const SHELL_ATTR = "data-dream-shell";
+  const PART_ATTR = "data-aurora-part";
   const ROOT_ATTRS = [
     "data-aurora-skin", SHELL_ATTR,
     "data-dream-route", "data-dream-home-utility", "data-dream-shell-present",
@@ -58,6 +59,7 @@
   let styleSheet = null;
   const markedNodes = new Map(Object.values(LOCAL_MARKERS)
     .map((attribute) => [attribute, new Set()]));
+  const semanticParts = new Map();
   const navigationRetryTimers = new Set();
   let navigationGeneration = 0;
   const now = () => typeof performance === "object" && typeof performance.now === "function"
@@ -562,6 +564,55 @@
     try { return [...document.querySelectorAll(selector)]; } catch { return []; }
   };
 
+  const queryOne = (selector) => {
+    try { return document.querySelector(selector); } catch { return null; }
+  };
+
+  const selectorNode = (key) => {
+    const selector = selectorByKey.get(key)?.selector;
+    return selector ? queryOne(selector) : null;
+  };
+
+  // 语义标记只作为样式回退，不参与 doctor/verifier 的原生结构判级，
+  // 避免注入器用自己写入的属性制造“验证成功”。
+  const reconcilePart = (part, nextNode) => {
+    const previousNode = semanticParts.get(part) || null;
+    if (previousNode && previousNode !== nextNode && previousNode.getAttribute?.(PART_ATTR) === part) {
+      previousNode.removeAttribute?.(PART_ATTR);
+    }
+    if (nextNode) {
+      if (nextNode.getAttribute?.(PART_ATTR) !== part) {
+        nextNode.setAttribute?.(PART_ATTR, part);
+        metrics.attributeWrites += 1;
+      }
+      semanticParts.set(part, nextNode);
+    } else {
+      semanticParts.delete(part);
+    }
+  };
+
+  const refreshSemanticParts = () => {
+    const main = selectorNode("shell-main") || queryOne('main, [role="main"]');
+    const sidebar = selectorNode("left-panel");
+    const header = selectorNode("header-tint") ||
+      queryOne("header[data-app-shell-header-edge-scroll], header[data-app-shell-application-menu-bar]");
+    let composer = selectorNode("composer-chrome");
+    if (!composer) {
+      const input = queryOne('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]');
+      composer = input?.closest?.(':is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"])') || null;
+    }
+    const toolbarSelector = selectorByKey.get("composer-toolbar")?.selector;
+    const toolbar = composer && toolbarSelector
+      ? (() => { try { return composer.querySelector?.(toolbarSelector) || null; } catch { return null; } })()
+      : null;
+
+    reconcilePart("main", main);
+    reconcilePart("sidebar", sidebar);
+    reconcilePart("header", header);
+    reconcilePart("composer", composer);
+    reconcilePart("composer-toolbar", toolbar);
+  };
+
   const reconcileMarker = (attribute, nextNodes) => {
     const previousNodes = markedNodes.get(attribute);
     const next = new Set(nextNodes);
@@ -615,11 +666,12 @@
   const detectScope = () => {
     const overlay = selectorHit("overlay-menu") || selectorHit("overlay-dialog") ||
       selectorHit("overlay-popper");
-    let baseState = "thread";
-    if (selectorHit("appearance-radio") || stableTestidHit("theme-preview")) baseState = "settings";
+    let baseState = "unknown";
+    if (selectorHit("settings-panel") || selectorHit("appearance-radio") ||
+      stableTestidHit("theme-preview")) baseState = "settings";
     else if (selectorHit("home-icon") || selectorHit("home-route-css") ||
       selectorHit("home-route")) baseState = "home";
-    else if (!selectorHit("shell-main")) baseState = "settings";
+    else if (selectorHit("shell-main") || queryOne('main, [role="main"]')) baseState = "thread";
     const missingL1 = SELECTOR_CONTRACT.selectors
       .filter((entry) => entry.tier === "L1" && entry.required &&
         scopeMatches(entry.scope, baseState, overlay) && !selectorHit(entry.key))
@@ -631,20 +683,21 @@
       // Settings replaces (or partially replaces) the app shell on macOS and
       // can retain a shell on Windows.  It is therefore always an L0 scope;
       // never treat the absence of the home/thread L1 anchors as a failure.
-      level: baseState === "settings" || missingL1.length ? "L0" : "L1",
+      level: baseState === "settings" || baseState === "unknown" || missingL1.length ? "L0" : "L1",
       missingL1,
     };
   };
 
   const refreshScope = () => {
     metrics.routePasses += 1;
+    refreshSemanticParts();
     const scope = detectScope();
     const root = document.documentElement;
     if (root) {
       setAttribute(root, "data-dream-route", scope.baseState);
       setAttribute(root, "data-dream-home-utility",
         scope.baseState === "home" && selectorHit("home-utility") ? "true" : "false");
-      setAttribute(root, "data-dream-shell-present", selectorHit("shell-main") ? "true" : "false");
+      setAttribute(root, "data-dream-shell-present", semanticParts.has("main") ? "true" : "false");
     }
     refreshLocalMarkers(scope.baseState);
     const state = window[STATE_KEY];
@@ -689,6 +742,10 @@
       for (const node of nodes) node.removeAttribute?.(attribute);
       markedNodes.set(attribute, new Set());
     }
+    for (const [part, node] of semanticParts) {
+      if (node.getAttribute?.(PART_ATTR) === part) node.removeAttribute?.(PART_ATTR);
+    }
+    semanticParts.clear();
     if (analysisTimer) clearTimeout(analysisTimer);
     if (state?.mediaHandler && state?.mediaQuery) {
       try { state.mediaQuery.removeEventListener("change", state.mediaHandler); } catch {}

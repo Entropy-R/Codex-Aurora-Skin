@@ -5,7 +5,7 @@
 macOS 版本要求 macOS 13 或更高版本，并需要已安装官方 Codex App。
 
 1. 从 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases)
-   下载 `CodexAuroraSkin-v1.0.0.dmg` 和 `SHA256SUMS.txt`。
+   下载 `CodexAuroraSkin-v1.0.1.dmg` 和 `SHA256SUMS.txt`。
 2. 核对 DMG 的 SHA-256 与校验文件一致。
 3. 打开 DMG，将 “Codex Aurora Skin” 拖入“应用程序”。
 4. 尝试启动一次。如果 macOS 提示无法验证开发者，请打开
@@ -26,7 +26,11 @@ Gatekeeper，也不提供删除 quarantine 属性的终端命令。
    正常重启 Codex。
 
 App 不会常驻菜单栏、创建登录项或联网检查更新。后续再次打开 App 即可重新启动
-管理器。
+管理器。Mac 从休眠中唤醒后，管理器会重新获得完整心跳窗口，皮肤连接会在
+45 秒宽限期内自动恢复；只有持续无法恢复时才会提示重新应用主题。
+
+如果旧管理器页面提示“管理器连接已断开，请重新打开 Codex Aurora Skin。”，
+说明本地管理进程已经退出，重新启动 App 即可。
 
 ## 数据与恢复
 

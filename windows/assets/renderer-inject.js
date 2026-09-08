@@ -1,11 +1,12 @@
 // Canonical cross-platform renderer. Run tools/sync-runtime-assets.mjs after editing.
 ((cssText, artDataUrl, themeConfig) => {
-  const SELECTOR_CONTRACT = {"schema":"codex-aurora-skin-selectors/1","selectors":[{"key":"shell-main","selector":"main.main-surface","tier":"L1","scope":"all","required":true},{"key":"left-panel","selector":"aside.app-shell-left-panel","tier":"L1","scope":"all","required":true},{"key":"header-tint","selector":"header.app-header-tint","tier":"L1","scope":"all","required":true},{"key":"home-icon","selector":"[data-testid=\"home-icon\"]","tier":"L1","scope":"home","required":true},{"key":"home-route","selector":"[role=\"main\"]:has([data-testid=\"home-icon\"])","tier":"L1","scope":"home","required":true},{"key":"home-route-css","selector":"[role=\"main\"]","tier":"L1","scope":"home","required":true},{"key":"composer-chrome","selector":".composer-surface-chrome","tier":"L2","scope":"home+thread","required":false},{"key":"home-utility","selector":"[class*=\"_homeUtilityBar_\"]","tier":"L2","scope":"home","required":false},{"key":"game-source","selector":"[data-feature=\"game-source\"]","tier":"L2","scope":"home","required":false},{"key":"home-suggestions","selector":".group\\/home-suggestions","tier":"L2","scope":"home","required":false},{"key":"project-selector","selector":".group\\/project-selector","tier":"L2","scope":"home config","required":false},{"key":"markdown","selector":"[class*=\"_markdown\"]","tier":"L2","scope":"thread","required":false},{"key":"appearance-radio","selector":"input[name=\"appearance-theme\"]","tier":"L2","scope":"settings","required":false},{"key":"overlay-menu","selector":"[role=\"menu\"]","tier":"L2","scope":"overlay","required":false},{"key":"overlay-dialog","selector":"[role=\"dialog\"]","tier":"L2","scope":"overlay","required":false},{"key":"overlay-popper","selector":"[data-radix-popper-content-wrapper]","tier":"L2","scope":"overlay","required":false}],"stableTestids":["app-shell-header-context-menu-surface","home-icon","theme-preview"]};
+  const SELECTOR_CONTRACT = {"schema":"codex-aurora-skin-selectors/1","selectors":[{"key":"shell-main","selector":"main:is(.main-surface, [data-app-shell-main-surface], [class*=\"_MainContentSurface_\"])","tier":"L1","scope":"all","required":true},{"key":"left-panel","selector":"aside.app-shell-left-panel","tier":"L1","scope":"all","required":true},{"key":"header-tint","selector":"header:is(.app-header-tint, [data-app-shell-header-edge-scroll], [class*=\"_Header_\"])","tier":"L1","scope":"all","required":true},{"key":"main-content-top-fade","selector":":is(.app-shell-main-content-top-fade, [data-app-shell-main-content-top-fade], [class*=\"_MainContentTopFade_\"])","tier":"L2","scope":"all","required":false},{"key":"home-icon","selector":"[data-testid=\"home-icon\"]","tier":"L1","scope":"home","required":true},{"key":"home-route","selector":"[role=\"main\"]:has([data-testid=\"home-icon\"])","tier":"L1","scope":"home","required":true},{"key":"home-route-css","selector":"[role=\"main\"]","tier":"L1","scope":"home","required":true},{"key":"composer-chrome","selector":":is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant])","tier":"L2","scope":"home+thread","required":false},{"key":"composer-toolbar","selector":":is(.composer-toolbar, [data-composer-footer-responsive], [class*=\"_ComposerLayoutFooter_\"])","tier":"L2","scope":"home+thread","required":false},{"key":"home-utility","selector":"[class*=\"_homeUtilityBar_\"]","tier":"L2","scope":"home","required":false},{"key":"game-source","selector":"[data-feature=\"game-source\"]","tier":"L2","scope":"home","required":false},{"key":"home-suggestions","selector":".group\\/home-suggestions","tier":"L2","scope":"home","required":false},{"key":"project-selector","selector":".group\\/project-selector","tier":"L2","scope":"home config","required":false},{"key":"markdown","selector":"[class*=\"_markdown\"]","tier":"L2","scope":"thread","required":false},{"key":"thread-surface","selector":".thread-scroll-container","tier":"L2","scope":"thread","required":false},{"key":"thread-composer-fade","selector":":is(.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary, .thread-scroll-container .bg-gradient-to-t.from-surface.via-surface)","tier":"L2","scope":"thread","required":false},{"key":"message","selector":":is([data-message-author-role], [data-local-conversation-user-anchor], [data-local-conversation-final-assistant])","tier":"L2","scope":"thread","required":false},{"key":"settings-panel","selector":"[data-settings-panel-slug=\"general-settings\"]","tier":"L2","scope":"settings","required":false},{"key":"appearance-radio","selector":"input[name=\"appearance-theme\"]","tier":"L2","scope":"settings","required":false},{"key":"overlay-menu","selector":"[role=\"menu\"]","tier":"L2","scope":"overlay","required":false},{"key":"overlay-dialog","selector":"[role=\"dialog\"]","tier":"L2","scope":"overlay","required":false},{"key":"overlay-popper","selector":"[data-radix-popper-content-wrapper]","tier":"L2","scope":"overlay","required":false}],"stableTestids":["app-shell-header-context-menu-surface","home-icon","theme-preview"]};
   const STATE_KEY = "__CODEX_AURORA_SKIN_STATE__";
   const DISABLED_KEY = "__CODEX_AURORA_SKIN_DISABLED__";
   const STYLE_REGISTRY_KEY = "__CODEX_AURORA_SKIN_STYLE_SHEETS__";
   const STYLE_ID = "codex-aurora-skin-style";
   const SHELL_ATTR = "data-dream-shell";
+  const PART_ATTR = "data-aurora-part";
   const ROOT_ATTRS = [
     "data-aurora-skin", SHELL_ATTR,
     "data-dream-route", "data-dream-home-utility", "data-dream-shell-present",
@@ -58,6 +59,7 @@
   let styleSheet = null;
   const markedNodes = new Map(Object.values(LOCAL_MARKERS)
     .map((attribute) => [attribute, new Set()]));
+  const semanticParts = new Map();
   const navigationRetryTimers = new Set();
   let navigationGeneration = 0;
   const now = () => typeof performance === "object" && typeof performance.now === "function"
@@ -562,6 +564,55 @@
     try { return [...document.querySelectorAll(selector)]; } catch { return []; }
   };
 
+  const queryOne = (selector) => {
+    try { return document.querySelector(selector); } catch { return null; }
+  };
+
+  const selectorNode = (key) => {
+    const selector = selectorByKey.get(key)?.selector;
+    return selector ? queryOne(selector) : null;
+  };
+
+  // 语义标记只作为样式回退，不参与 doctor/verifier 的原生结构判级，
+  // 避免注入器用自己写入的属性制造“验证成功”。
+  const reconcilePart = (part, nextNode) => {
+    const previousNode = semanticParts.get(part) || null;
+    if (previousNode && previousNode !== nextNode && previousNode.getAttribute?.(PART_ATTR) === part) {
+      previousNode.removeAttribute?.(PART_ATTR);
+    }
+    if (nextNode) {
+      if (nextNode.getAttribute?.(PART_ATTR) !== part) {
+        nextNode.setAttribute?.(PART_ATTR, part);
+        metrics.attributeWrites += 1;
+      }
+      semanticParts.set(part, nextNode);
+    } else {
+      semanticParts.delete(part);
+    }
+  };
+
+  const refreshSemanticParts = () => {
+    const main = selectorNode("shell-main") || queryOne('main, [role="main"]');
+    const sidebar = selectorNode("left-panel");
+    const header = selectorNode("header-tint") ||
+      queryOne("header[data-app-shell-header-edge-scroll], header[data-app-shell-application-menu-bar]");
+    let composer = selectorNode("composer-chrome");
+    if (!composer) {
+      const input = queryOne('[data-codex-composer="true"], [role="textbox"], textarea, [contenteditable="true"]');
+      composer = input?.closest?.(':is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"])') || null;
+    }
+    const toolbarSelector = selectorByKey.get("composer-toolbar")?.selector;
+    const toolbar = composer && toolbarSelector
+      ? (() => { try { return composer.querySelector?.(toolbarSelector) || null; } catch { return null; } })()
+      : null;
+
+    reconcilePart("main", main);
+    reconcilePart("sidebar", sidebar);
+    reconcilePart("header", header);
+    reconcilePart("composer", composer);
+    reconcilePart("composer-toolbar", toolbar);
+  };
+
   const reconcileMarker = (attribute, nextNodes) => {
     const previousNodes = markedNodes.get(attribute);
     const next = new Set(nextNodes);
@@ -615,11 +666,12 @@
   const detectScope = () => {
     const overlay = selectorHit("overlay-menu") || selectorHit("overlay-dialog") ||
       selectorHit("overlay-popper");
-    let baseState = "thread";
-    if (selectorHit("appearance-radio") || stableTestidHit("theme-preview")) baseState = "settings";
+    let baseState = "unknown";
+    if (selectorHit("settings-panel") || selectorHit("appearance-radio") ||
+      stableTestidHit("theme-preview")) baseState = "settings";
     else if (selectorHit("home-icon") || selectorHit("home-route-css") ||
       selectorHit("home-route")) baseState = "home";
-    else if (!selectorHit("shell-main")) baseState = "settings";
+    else if (selectorHit("shell-main") || queryOne('main, [role="main"]')) baseState = "thread";
     const missingL1 = SELECTOR_CONTRACT.selectors
       .filter((entry) => entry.tier === "L1" && entry.required &&
         scopeMatches(entry.scope, baseState, overlay) && !selectorHit(entry.key))
@@ -631,20 +683,21 @@
       // Settings replaces (or partially replaces) the app shell on macOS and
       // can retain a shell on Windows.  It is therefore always an L0 scope;
       // never treat the absence of the home/thread L1 anchors as a failure.
-      level: baseState === "settings" || missingL1.length ? "L0" : "L1",
+      level: baseState === "settings" || baseState === "unknown" || missingL1.length ? "L0" : "L1",
       missingL1,
     };
   };
 
   const refreshScope = () => {
     metrics.routePasses += 1;
+    refreshSemanticParts();
     const scope = detectScope();
     const root = document.documentElement;
     if (root) {
       setAttribute(root, "data-dream-route", scope.baseState);
       setAttribute(root, "data-dream-home-utility",
         scope.baseState === "home" && selectorHit("home-utility") ? "true" : "false");
-      setAttribute(root, "data-dream-shell-present", selectorHit("shell-main") ? "true" : "false");
+      setAttribute(root, "data-dream-shell-present", semanticParts.has("main") ? "true" : "false");
     }
     refreshLocalMarkers(scope.baseState);
     const state = window[STATE_KEY];
@@ -689,6 +742,10 @@
       for (const node of nodes) node.removeAttribute?.(attribute);
       markedNodes.set(attribute, new Set());
     }
+    for (const [part, node] of semanticParts) {
+      if (node.getAttribute?.(PART_ATTR) === part) node.removeAttribute?.(PART_ATTR);
+    }
+    semanticParts.clear();
     if (analysisTimer) clearTimeout(analysisTimer);
     if (state?.mediaHandler && state?.mediaQuery) {
       try { state.mediaQuery.removeEventListener("change", state.mediaHandler); } catch {}

@@ -1,3 +1,5 @@
+import { requestBlob, requestJson } from "./api-client.mjs";
+
 const fragment = new URLSearchParams(location.hash.slice(1));
 const fragmentToken = fragment.get("token");
 const query = new URLSearchParams(location.search);
@@ -38,18 +40,7 @@ function toast(message, error = false) {
 }
 
 async function api(path, options = {}) {
-  if (!token) throw new Error("管理器链接缺少安全令牌，请重新打开 Codex Aurora Skin。");
-  const response = await fetch(path, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${token}`,
-      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
-      ...options.headers,
-    },
-  });
-  const result = await response.json().catch(() => ({ error: `请求失败：${response.status}` }));
-  if (!response.ok || result.ok === false) throw new Error(result.error || `请求失败：${response.status}`);
-  return result;
+  return requestJson(fetch, token, path, options);
 }
 
 function setBusy(busy) {
@@ -61,9 +52,7 @@ function setBusy(busy) {
 
 async function authorizedImage(url) {
   if (state.imageUrls.has(url)) return state.imageUrls.get(url);
-  const response = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
-  if (!response.ok) throw new Error("主题缩略图读取失败");
-  const objectUrl = URL.createObjectURL(await response.blob());
+  const objectUrl = URL.createObjectURL(await requestBlob(fetch, token, url));
   state.imageUrls.set(url, objectUrl);
   return objectUrl;
 }

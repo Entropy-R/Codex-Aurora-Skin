@@ -11,10 +11,16 @@ Windows 版本提供 Inno Setup 安装包、固定 Node.js 运行时、Microsoft
 源码验证：
 
 ```powershell
+node tools/check-project-consistency.mjs
 node --test manager/*.test.mjs
 pwsh -NoProfile -File windows/tests/run-tests.ps1
 pwsh -NoProfile -File windows/tests/installer-static.tests.ps1
 ```
 
-运行时状态位于 `%LOCALAPPDATA%\CodexAuroraSkin`。卸载前会恢复官方外观，用户主题、
-图片和覆盖值默认保留。
+安装器首次安装和升级时均允许选择程序文件目录。运行时状态位于
+`%LOCALAPPDATA%\CodexAuroraSkin`。卸载前会恢复官方外观，用户主题、图片和覆盖值
+默认保留。
+
+跨电脑继续开发时，请检出已有版本集成分支，不要另建 Windows 副本。当前
+`v1.0.1` Windows 验收使用 `codex/v1.0.1-fixes`；完整规则见
+[`docs/DEVELOPMENT_WORKFLOW.md`](../docs/DEVELOPMENT_WORKFLOW.md)。

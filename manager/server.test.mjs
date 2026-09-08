@@ -51,6 +51,10 @@ test("本地管理 API 校验 Host、令牌并返回离线目录", async (t) => 
   const token = managerUrl.searchParams.get("bootstrap");
   const base = managerUrl.origin;
 
+  const apiClient = await fetch(`${base}/api-client.mjs`);
+  assert.equal(apiClient.status, 200);
+  assert.match(await apiClient.text(), /export async function requestJson/);
+
   const unauthorized = await fetch(`${base}/api/bootstrap`);
   assert.equal(unauthorized.status, 401);
 

@@ -379,8 +379,10 @@ try {
   New-Item -ItemType Directory -Path $managerWebPayloadRoot -Force | Out-Null
   foreach ($relative in @(
       'image-metadata.mjs',
+      'heartbeat-lease.mjs',
       'server.mjs',
       'theme-store.mjs',
+      'web\api-client.mjs',
       'web\app.js',
       'web\index.html',
       'web\styles.css'
@@ -449,9 +451,11 @@ try {
     'manager\server.mjs',
     'manager\theme-store.mjs',
     'manager\image-metadata.mjs',
+    'manager\heartbeat-lease.mjs',
     'manager\web\index.html',
     'manager\web\styles.css',
     'manager\web\app.js',
+    'manager\web\api-client.mjs',
     'scripts\common-windows.ps1',
     'scripts\config-utf8.ps1',
     'scripts\image-metadata.mjs',
