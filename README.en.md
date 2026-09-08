@@ -119,8 +119,8 @@ platform state directory across upgrades and default uninstall.
 Brightness ranges from `0.35` to `1.20`. In dark mode, background dimming ranges
 from `0` to `0.70` and surface strength from `0.20` to `1.00`; light mode uses
 safe minimums of `0.32` and `0.60` respectively for text contrast. Image controls affect
-only the background layer, while surface strength changes panel translucency
-without filtering text or icons. Themes always use `appearance: auto` and
+only the background layer, while surface strength changes panel and code-block
+translucency without filtering text or icons. Themes always use `appearance: auto` and
 follow the official Codex light/dark appearance.
 
 ## Security boundary

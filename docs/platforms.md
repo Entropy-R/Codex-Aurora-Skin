@@ -42,6 +42,6 @@
 
 主题固定 `appearance: auto`。渲染器观察 Codex 官方浅暗外观，切换到对应的
 `visual.light` 或 `visual.dark` 参数。亮度和背景压暗只作用于背景层，
-`surfaceOpacity` 只控制原生面板底色强度，不过滤文字和图标。
+`surfaceOpacity` 只控制原生面板与代码块底色强度，不过滤文字和图标。
 
 v1 用户主题仍可读取；运行时生成 v2 活动快照，但不批量重写用户原文件。

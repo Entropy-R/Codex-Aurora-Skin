@@ -289,6 +289,10 @@ export async function runRendererRuntimeTest(assetRoot) {
     "Home and task routes must use one background composition instead of route-specific global tints.");
   assert.match(css, /--ds-surface-opacity:\s*\.78/);
   assert.match(css, /--ds-surface-strong:\s*rgb\(var\(--ds-panel-rgb\)\s*\/\s*var\(--ds-surface-opacity\)\)/);
+  assert.match(css, /\[data-markdown-copy="code-block"\]\[data-theme\][^{}]*\{[^}]*background:\s*var\(--ds-surface-faint\)\s*!important;/s,
+    "Code-block bodies must follow the shared surface-opacity control.");
+  assert.match(css, /\[data-markdown-copy="code-block"\]\[data-theme\]\s*>\s*\[data-markdown-copy="exclude"\][^{}]*\{[^}]*background-color:\s*var\(--ds-surface-soft\)\s*!important;/s,
+    "Code-block sticky headers must follow the shared surface-opacity control.");
   assert.doesNotMatch(css, /aurora-skin-brand-subtitle|aurora-skin-status/,
     "Thread header must not inject Aurora Skin branding or online status labels.");
   assert.match(css, /:not\(\[data-dream-route="home"\]\)\s+:is\([^{}]*data-aurora-part="main"[^{}]*\)::before\s*\{[\s\S]*?opacity:\s*1;/,

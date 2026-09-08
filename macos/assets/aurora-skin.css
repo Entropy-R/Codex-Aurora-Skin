@@ -422,6 +422,21 @@ html[data-aurora-skin="active"][data-dream-shell="light"]:not([data-dream-route=
   background: var(--ds-surface-soft);
 }
 
+/* Codex gives code-block headers an opaque native surface while the body is
+   nearly clear. Keep the sticky-header contrast, but let both layers follow
+   the same surface-opacity control as the rest of the themed interface. */
+html[data-aurora-skin="active"] [data-markdown-copy="code-block"][data-theme] {
+  background: var(--ds-surface-faint) !important;
+  border-color: var(--ds-line) !important;
+  backdrop-filter: blur(10px) saturate(106%) !important;
+}
+
+html[data-aurora-skin="active"]
+  [data-markdown-copy="code-block"][data-theme] > [data-markdown-copy="exclude"] {
+  background-color: var(--ds-surface-soft) !important;
+  background-image: none !important;
+}
+
 html[data-aurora-skin="active"][data-dream-shell="light"][data-dream-route="home"]
   :is(main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]), [data-aurora-part="main"])::after,
 html[data-aurora-skin="active"][data-dream-shell="light"][data-dream-route="home"] [role="main"] [data-feature="game-source"]::before {
