@@ -6,6 +6,7 @@ REPOSITORY_ROOT="$(cd "$ROOT/.." && pwd -P)"
 NODE="${NODE:-$(command -v node)}"
 PACKAGE_ROOT="$ROOT/menubar-app"
 VERSION="$(/usr/bin/tr -d '[:space:]' < "$ROOT/VERSION")"
+ENGINE_BUILD="$(/usr/bin/tr -d '[:space:]' < "$ROOT/ENGINE_BUILD")"
 OUTPUT_APP="$ROOT/release/Codex Aurora Skin.app"
 SKIP_TESTS="false"
 
@@ -19,6 +20,8 @@ done
 
 printf '%s' "$VERSION" | /usr/bin/grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' \
   || { printf 'Invalid VERSION: %s\n' "$VERSION" >&2; exit 1; }
+printf '%s' "$ENGINE_BUILD" | /usr/bin/grep -Eq '^[1-9][0-9]*$' \
+  || { printf 'Invalid ENGINE_BUILD: %s\n' "$ENGINE_BUILD" >&2; exit 1; }
 [ -n "$OUTPUT_APP" ] || { printf 'Output app path cannot be empty.\n' >&2; exit 1; }
 "$NODE" "$REPOSITORY_ROOT/tools/verify-library.mjs" >/dev/null
 case "$(/usr/bin/basename "$OUTPUT_APP")" in
@@ -84,7 +87,7 @@ else
 fi
 /bin/chmod 755 "$MACOS_DIR/CodexAuroraSkinMenuBar"
 
-/usr/bin/sed "s/__VERSION__/$VERSION/g" \
+/usr/bin/sed -e "s/__VERSION__/$VERSION/g" -e "s/__BUILD__/$ENGINE_BUILD/g" \
   "$PACKAGE_ROOT/Resources/Info.plist.template" > "$CONTENTS/Info.plist"
 /usr/bin/plutil -lint "$CONTENTS/Info.plist" >/dev/null
 
@@ -132,11 +135,13 @@ for relative in \
 done
 /usr/bin/rsync -a "$REPOSITORY_ROOT/library/" "$ENGINE/library/"
 /bin/cp "$ROOT/VERSION" "$ENGINE/VERSION"
+/bin/cp "$ROOT/ENGINE_BUILD" "$ENGINE/ENGINE_BUILD"
 /bin/cp "$ROOT/LICENSE" "$RESOURCES/LICENSE.txt"
 /bin/cp "$ROOT/NOTICE.md" "$RESOURCES/NOTICE.md"
 /bin/chmod 755 "$ENGINE/scripts/"*.sh
 /bin/chmod 644 "$ENGINE/scripts/"*.mjs
 /bin/chmod 644 "$ENGINE/VERSION"
+/bin/chmod 644 "$ENGINE/ENGINE_BUILD"
 "$ROOT/scripts/generate-app-icon.sh" "$RESOURCES/AuroraSkin.icns"
 [ -s "$RESOURCES/AuroraSkin.icns" ] \
   || { printf 'App icon is missing after generation: %s\n' "$RESOURCES/AuroraSkin.icns" >&2; exit 1; }

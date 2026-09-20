@@ -41,7 +41,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.1";
+const SKIN_VERSION = "1.0.2";
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const CDP_ID_PATTERN = /^[A-Za-z0-9._-]{1,200}$/;
 const MAX_ART_BYTES = 16 * 1024 * 1024;
@@ -1099,122 +1099,129 @@ async function runFinishOperation(options) {
   if (!shown) throw new Error("Could not show the completed operation state in the verified ChatGPT renderer");
 }
 
+export async function withConnectedSessionCleanup(connected, action) {
+  try {
+    return await action(connected);
+  } finally {
+    for (const { session } of connected) session.close();
+  }
+}
+
 async function runOneShot(options) {
   const connected = await connectCodexTargets(options.port, options.timeoutMs);
-  const operationToken = options.mode === "once" || options.mode === "remove"
-    ? options.operationToken ?? nextOperationToken()
-    : null;
-  if (operationToken) {
-    const message = options.mode === "remove" ? "正在暂停皮肤…" : "正在准备皮肤…";
-    const action = options.operationToken ? presentOperationUi : (session, token, state, text) =>
-      bestEffortOperationUi(session, "show", token, state, text);
-    await Promise.all(connected.map(({ session }) => action(
-      session, operationToken, "loading", message,
-    )));
-  }
-  let loaded = null;
-  try {
-    loaded = (options.mode === "once" || options.mode === "verify" || options.reload)
-      ? await loadPayload(options.themeDir)
+  return withConnectedSessionCleanup(connected, async () => {
+    const operationToken = options.mode === "once" || options.mode === "remove"
+      ? options.operationToken ?? nextOperationToken()
       : null;
-  } catch (error) {
     if (operationToken) {
-      await Promise.all(connected.map(({ session }) => presentOperationUi(
-        session, operationToken, "error", "皮肤准备失败",
+      const message = options.mode === "remove" ? "正在暂停皮肤…" : "正在准备皮肤…";
+      const action = options.operationToken ? presentOperationUi : (session, token, state, text) =>
+        bestEffortOperationUi(session, "show", token, state, text);
+      await Promise.all(connected.map(({ session }) => action(
+        session, operationToken, "loading", message,
       )));
     }
-    for (const { session } of connected) session.close();
-    throw error;
-  }
-  const payload = loaded?.payload ?? null;
-  const results = [];
-  let screenshotCaptured = false;
-
-  for (const { target, session, probe } of connected) {
+    let loaded = null;
     try {
-      if (options.mode === "remove") await removeFromSession(session);
-      else if (options.mode === "once") {
-        await bestEffortOperationUi(
-          session, "update", operationToken, "loading", `正在应用「${loaded.theme.name}」…`,
-        );
-        await applyToSession(session, payload);
-      }
-
-      if (options.reload) {
-        await session.send("Page.reload", { ignoreCache: true });
-        await new Promise((resolve) => setTimeout(resolve, 1600));
-        if (options.mode !== "remove") {
-          if (operationToken) {
-            await presentOperationUi(
-              session, operationToken, "loading", `正在应用「${loaded.theme.name}」…`,
-            );
-          }
-          await applyToSession(session, payload);
-        }
-      }
-
-      if (operationToken) {
-        await presentOperationUi(
-          session,
-          operationToken,
-          "loading",
-          options.mode === "remove" ? "正在确认皮肤已暂停…" : "正在检查显示效果…",
-        );
-      }
-      const result = options.mode === "remove"
-        ? await verifyRemovedSession(session)
-        : await waitForVerifiedSession(
-          session,
-          options.timeoutMs,
-          loaded?.theme.id ?? null,
-          loaded?.revision ?? null,
-        );
-      results.push({ targetId: target.id, title: target.title, url: target.url, probe, result });
-      if (operationToken) {
-        const passed = options.mode === "remove" ? result === true : result?.pass;
-        await presentOperationUi(
-          session,
-          operationToken,
-          passed ? "success" : "error",
-          passed
-            ? options.mode === "remove" ? "皮肤已暂停" : `已应用「${loaded.theme.name}」`
-            : options.mode === "remove" ? "暂停校验失败" : "显示校验失败",
-        );
-      }
-
-      if (options.screenshot && !screenshotCaptured) {
-        if (operationToken) {
-          await bestEffortOperationUi(session, "hide", operationToken, "loading", "");
-        }
-        await capture(session, options.screenshot);
-        screenshotCaptured = true;
-      }
+      loaded = (options.mode === "once" || options.mode === "verify" || options.reload)
+        ? await loadPayload(options.themeDir)
+        : null;
     } catch (error) {
       if (operationToken) {
-        await presentOperationUi(
-          session,
-          operationToken,
-          "error",
-          options.mode === "remove" ? "暂停失败，请重试" : "应用失败，请重试",
-        );
+        await Promise.all(connected.map(({ session }) => presentOperationUi(
+          session, operationToken, "error", "皮肤准备失败",
+        )));
       }
-      results.push({
-        targetId: target.id,
-        title: target.title,
-        url: target.url,
-        probe,
-        error: error.message,
-        result: null,
-      });
-    } finally {
-      session.close();
+      throw error;
     }
-  }
+    const payload = loaded?.payload ?? null;
+    const results = [];
+    let screenshotCaptured = false;
 
-  console.log(JSON.stringify({ mode: options.mode, version: SKIN_VERSION, port: options.port, targets: results }, null, 2));
-  const failed = results.length === 0 || results.some((item) =>
-    item.error || (options.mode === "remove" ? item.result !== true : !item.result?.pass));
-  if (failed) process.exitCode = 2;
+    for (const { target, session, probe } of connected) {
+      try {
+        if (options.mode === "remove") await removeFromSession(session);
+        else if (options.mode === "once") {
+          await bestEffortOperationUi(
+            session, "update", operationToken, "loading", `正在应用「${loaded.theme.name}」…`,
+          );
+          await applyToSession(session, payload);
+        }
+
+        if (options.reload) {
+          await session.send("Page.reload", { ignoreCache: true });
+          await new Promise((resolve) => setTimeout(resolve, 1600));
+          if (options.mode !== "remove") {
+            if (operationToken) {
+              await presentOperationUi(
+                session, operationToken, "loading", `正在应用「${loaded.theme.name}」…`,
+              );
+            }
+            await applyToSession(session, payload);
+          }
+        }
+
+        if (operationToken) {
+          await presentOperationUi(
+            session,
+            operationToken,
+            "loading",
+            options.mode === "remove" ? "正在确认皮肤已暂停…" : "正在检查显示效果…",
+          );
+        }
+        const result = options.mode === "remove"
+          ? await verifyRemovedSession(session)
+          : await waitForVerifiedSession(
+            session,
+            options.timeoutMs,
+            loaded?.theme.id ?? null,
+            loaded?.revision ?? null,
+          );
+        results.push({ targetId: target.id, title: target.title, url: target.url, probe, result });
+        if (operationToken) {
+          const passed = options.mode === "remove" ? result === true : result?.pass;
+          await presentOperationUi(
+            session,
+            operationToken,
+            passed ? "success" : "error",
+            passed
+              ? options.mode === "remove" ? "皮肤已暂停" : `已应用「${loaded.theme.name}」`
+              : options.mode === "remove" ? "暂停校验失败" : "显示校验失败",
+          );
+        }
+
+        if (options.screenshot && !screenshotCaptured) {
+          if (operationToken) {
+            await bestEffortOperationUi(session, "hide", operationToken, "loading", "");
+          }
+          await capture(session, options.screenshot);
+          screenshotCaptured = true;
+        }
+      } catch (error) {
+        if (operationToken) {
+          await presentOperationUi(
+            session,
+            operationToken,
+            "error",
+            options.mode === "remove" ? "暂停失败，请重试" : "应用失败，请重试",
+          );
+        }
+        results.push({
+          targetId: target.id,
+          title: target.title,
+          url: target.url,
+          probe,
+          error: error.message,
+          result: null,
+        });
+      }
+    }
+
+    console.log(JSON.stringify({ mode: options.mode, version: SKIN_VERSION, port: options.port, targets: results }, null, 2));
+    const failed = results.length === 0 || results.some((item) =>
+      item.error || (options.mode === "remove" ? item.result !== true : !item.result?.pass));
+    if (failed) process.exitCode = 2;
+  });
 }
 
 export function earlyPayloadFor(payload, revision) {

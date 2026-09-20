@@ -2,6 +2,7 @@
 
 ## Next
 
+- 版本字段与跨平台发布统一升级到 1.0.2；Windows 运行行为不变。
 - 兼容 Codex 26.810 的新版 main、Header 与 Composer Layout Root，并修复旧
   verifier 在结构缺失时仍将 L0 报告为成功的问题。
 - 兼容 Codex 26.810 的新版会话底部渐变类，移除输入框后方的黑色遮罩，同时

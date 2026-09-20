@@ -5,7 +5,7 @@
 macOS 版本要求 macOS 13 或更高版本，并需要已安装官方 Codex App。
 
 1. 从 [GitHub Releases](https://github.com/Entropy-R/Codex-Aurora-Skin/releases)
-   下载 `CodexAuroraSkin-v1.0.1.dmg` 和 `SHA256SUMS.txt`。
+   下载 `CodexAuroraSkin-v1.0.2.dmg` 和 `SHA256SUMS.txt`。
 2. 核对 DMG 的 SHA-256 与校验文件一致。
 3. 打开 DMG，将 “Codex Aurora Skin” 拖入“应用程序”。
 4. 尝试启动一次。如果 macOS 提示无法验证开发者，请打开
