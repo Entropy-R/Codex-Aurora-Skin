@@ -194,6 +194,17 @@ async function candidatePorts(options) {
 
 const sleep = (milliseconds) => new Promise((resolve) => setTimeout(resolve, milliseconds));
 
+export function orderCodexAppTargets(targets) {
+  const rank = (target) => {
+    const url = String(target?.url || "");
+    if (url === "app://-/index.html") return 0;
+    if (url.startsWith("app://-/index.html?")) return 1;
+    if (url.startsWith("app://-/detached-window.html")) return 2;
+    return 3;
+  };
+  return [...targets].sort((left, right) => rank(left) - rank(right));
+}
+
 async function discover(options) {
   const ports = await candidatePorts(options);
   const deadline = Date.now() + options.waitSeconds * 1000;
@@ -202,7 +213,7 @@ async function discover(options) {
       try {
         await fetchJson(port, "/json/version");
         const targets = await fetchJson(port, "/json/list", 2000);
-        const target = (Array.isArray(targets) ? targets : []).find((item) => {
+        const candidates = (Array.isArray(targets) ? targets : []).filter((item) => {
           if (item?.type !== "page" || !String(item.url || "").startsWith("app://")) return false;
           try {
             const url = new URL(item.webSocketDebuggerUrl);
@@ -210,6 +221,7 @@ async function discover(options) {
               Number(url.port) === port && url.pathname.startsWith("/devtools/page/");
           } catch { return false; }
         });
+        const target = orderCodexAppTargets(candidates)[0];
         if (target) return { port, target };
       } catch {}
     }
