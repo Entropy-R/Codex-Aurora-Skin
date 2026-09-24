@@ -32,9 +32,8 @@ Download the public package for your platform from
 - Checksums: `SHA256SUMS.txt`
 
 Public assets vary by release; use the Assets list of the selected release as
-the source of truth. The initial Linux implementation is available on `main`,
-with packages in the
-[Linux v1.0.1 preview](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.1).
+the source of truth. Linux packages are available in the
+[Linux v1.0.2 preview](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.2).
 You can also install it from source as described below. The Linux packages are
 published as a preview because validation on every supported distribution and
 ARM64 hardware is not complete.

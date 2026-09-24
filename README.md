@@ -29,8 +29,8 @@ Codex Aurora Skin 是面向 Windows、macOS 与 Linux 的非官方 Codex 桌面�
 - 校验文件：`SHA256SUMS.txt`
 
 不同版本包含的公开构件可能不同，请以对应 Release 的 Assets 列表为准。Linux
-首版代码已合入 `main`，安装包发布在
-[Linux v1.0.1 预览版](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.1)；
+安装包发布在
+[Linux v1.0.2 预览版](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.2)；
 也可以按下文从源码安装。Linux 包尚未完成全部受支持发行版和 ARM64 实机验收，
 因此当前作为预览版提供。
 
