@@ -1,5 +1,5 @@
 Name: codex-aurora-skin
-Version: 1.0.2
+Version: 1.0.3
 Release: 1%{?dist}
 Summary: Local theme manager for ChatGPT Codex on Linux
 License: MIT
