@@ -67,13 +67,21 @@ export function formatDoctorResult(result) {
 }
 
 export function pageDoctor(selectors, stableTestids = []) {
+  const rendered = (node) => {
+    if (typeof node.checkVisibility === "function") return node.checkVisibility({ visibilityProperty: true });
+    for (let current = node; current; current = current.parentElement) {
+      const style = getComputedStyle(current);
+      if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse") return false;
+    }
+    return true;
+  };
   const byKey = new Map(selectors.map((probe) => [probe.key, probe]));
   const evaluated = new Map();
   const evaluate = function (probe) {
     if (evaluated.has(probe.key)) return evaluated.get(probe.key);
     let result;
     try {
-      result = { key: probe.key, count: document.querySelectorAll(probe.selector).length };
+      result = { key: probe.key, count: [...document.querySelectorAll(probe.selector)].filter(rendered).length };
     } catch (error) {
       result = { key: probe.key, count: 0, error: String((error && error.message) || error).slice(0, 160) };
     }
@@ -87,7 +95,7 @@ export function pageDoctor(selectors, stableTestids = []) {
   const stableTestidCount = function (testid) {
     if (!testid || !stableTestids.includes(testid)) return 0;
     const selector = `[data-testid="${testid}"]`;
-    try { return document.querySelectorAll(selector).length; } catch { return 0; }
+    try { return [...document.querySelectorAll(selector)].filter(rendered).length; } catch { return 0; }
   };
   // These probes are the small state-classification set.  Once the base route
   // and overlay state are known, every remaining selector is evaluated only if
@@ -101,7 +109,7 @@ export function pageDoctor(selectors, stableTestids = []) {
   else if (count("home-icon") > 0 || count("home-route") > 0) baseState = "home";
   else {
     let genericMain = false;
-    try { genericMain = Boolean(document.querySelector('main, [role="main"]')); } catch {}
+    try { genericMain = [...document.querySelectorAll('main, [role="main"]')].some(rendered); } catch {}
     if (count("shell-main") > 0 || genericMain) baseState = "thread";
   }
 
@@ -118,6 +126,7 @@ export function pageDoctor(selectors, stableTestids = []) {
   let appearance = "light";
   if (root && root.classList.contains("electron-dark")) appearance = "dark";
   else if (root && root.classList.contains("electron-light")) appearance = "light";
+  else if (["light", "dark"].includes(root?.getAttribute?.("data-theme"))) appearance = root.getAttribute("data-theme");
   else {
     try { appearance = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } catch {}
   }
