@@ -44,13 +44,15 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
     homeUtility: false,
     searchInputs: [],
     projectSelectors: [],
+    retainedHiddenRoutes: false,
   };
   let nextId = 0;
   let nextBlob = 0;
-  const makeElement = ({ parentElement = null, matches = [], closest = {} } = {}) => {
+  const makeElement = ({ parentElement = null, matches = [], closest = {}, rendered = true } = {}) => {
     const elementAttrs = new Map();
     return {
       parentElement,
+      checkVisibility() { return rendered; },
       getAttribute(name) { return elementAttrs.get(name) ?? null; },
       setAttribute(name, value) { elementAttrs.set(name, String(value)); },
       removeAttribute(name) { elementAttrs.delete(name); },
@@ -59,6 +61,7 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
     };
   };
   const shellMain = makeElement();
+  const hiddenRoute = makeElement({ rendered: false });
   const sidebar = makeElement();
   const header = makeElement();
   const composerToolbar = makeElement();
@@ -98,10 +101,10 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
     adoptedStyleSheets: adopted ? [] : undefined,
     createElement(tag) { return tag === "style" ? makeStyleNode() : { tagName: tag }; },
     getElementById(id) { return nodes.get(id) || null; },
-    querySelector(selector) {
+    queryActiveSelector(selector) {
       if (page.route === "settings" &&
         (selector.includes("settings-panel-slug") || selector.includes("appearance-theme") ||
-          selector.includes("theme-preview"))) return { selector };
+          selector.includes("theme-preview"))) return makeElement();
       if (selector === 'main, [role="main"]') return page.shellPresent ? shellMain : null;
       if (selector.includes("main-surface") || selector.includes("MainContentSurface") ||
         selector.includes("app-shell-main-surface")) return page.shellPresent ? shellMain : null;
@@ -113,20 +116,26 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
         return page.shellPresent ? header : null;
       }
       if (selector.includes("[role=\"main\"]") || selector.includes("[data-testid=\"home-icon\"]")) {
-        return page.route === "home" ? { selector } : null;
+        return page.route === "home" ? makeElement() : null;
       }
       if (selector.includes("composer-surface-chrome") ||
         selector.includes("data-composer-surface-variant")) {
         return page.route === "home" || page.route === "thread" ? composer : null;
       }
-      if (selector.includes("_homeUtilityBar_")) return page.homeUtility ? { selector } : null;
+      if (selector.includes("_homeUtilityBar_")) return page.homeUtility ? makeElement() : null;
       if (selector.includes("group\\/project-selector")) return page.projectSelectors[0] || null;
       return null;
     },
+    querySelector(selector) { return this.querySelectorAll(selector)[0] || null; },
     querySelectorAll(selector) {
       if (selector === 'input[type="text"]') return page.searchInputs;
       if (selector.includes("group\\/project-selector")) return page.projectSelectors;
-      return [];
+      const active = this.queryActiveSelector(selector);
+      const candidates = active ? [active] : [];
+      if (page.retainedHiddenRoutes && /main|home-icon|Header_|header-edge-scroll|composer-surface/.test(selector)) {
+        candidates.unshift(hiddenRoute);
+      }
+      return candidates;
     },
   };
   const navigation = {
@@ -279,6 +288,8 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.doesNotMatch(css, /__DREAM_SELECTOR_HOME_ROUTE_CSS__\s*>\s*div/,
     "主页结构会随 Codex 升级变化，皮肤不得按直接子节点层级重排原生输入区。");
   assert.match(css, /filter:\s*brightness\(var\(--ds-art-brightness\)\)/);
+  assert.match(css, /\[data-app-shell-page-surface="true"\][^{]*\{\s*background:\s*transparent\s*!important;/,
+    "Codex 26.1002 的全窗口外层底色不得覆盖已配置的主题背景。");
   assert.doesNotMatch(css, /body\s*\{[^}]*filter:\s*brightness/s,
     "Background brightness must never filter the native app body and controls.");
   assert.doesNotMatch(css, /body\s*\{[^}]*font-family\s*:/s,
@@ -348,6 +359,13 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.equal(home.rootClasses.writes.length, 0, "Runtime must not write classes");
   assert.ok(home.observers.every((observer) => !observer.options?.childList && !observer.options?.subtree));
 
+  const nativeTheme = makeFixture({ nativeAppearance: "dark" });
+  nativeTheme.rootClasses.values.clear();
+  nativeTheme.attrs.set("data-theme", "light");
+  vm.runInNewContext(nativeTheme.payloadFor(), nativeTheme.context);
+  assert.equal(nativeTheme.attrs.get("data-dream-shell"), "light",
+    "新版原生 data-theme 应优先于系统外观，且无需旧 electron-light 类。");
+
   const observer = home.observers[0];
   observer.callback([]);
   home.flushTimers(64);
@@ -369,9 +387,18 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.equal(state.metrics.routePasses, 2);
   assert.equal(home.attrs.get("data-dream-route"), "thread");
 
+  home.page.retainedHiddenRoutes = true;
+  navigationHandler();
+  home.flushTimers(64);
+  assert.equal(home.attrs.get("data-dream-route"), "thread",
+    "隐藏且保留的首页不能把可见对话误判成首页。");
+  assert.equal(home.shellMain.getAttribute("data-aurora-part"), "main",
+    "主区域标记必须选择隐藏副本之后的可见节点。");
+  home.page.retainedHiddenRoutes = false;
+
   const search = home.addSearch();
   home.flushTimers(250);
-  assert.equal(state.metrics.routePasses, 3);
+  assert.equal(state.metrics.routePasses, 4);
   assert.equal(search.sticky.getAttribute("data-dream-search-band"), "true");
   assert.equal(search.directHost.getAttribute("data-dream-search-input"), "true");
 
@@ -391,7 +418,7 @@ export async function runRendererRuntimeTest(assetRoot) {
   home.setRoute("home");
   navigationHandler();
   home.flushTimers(64);
-  assert.equal(state.metrics.navigationEvents, 4);
+  assert.equal(state.metrics.navigationEvents, 5);
   assert.equal(home.attrs.get("data-dream-route"), "home",
     "A stale navigation retry must not overwrite the latest route.");
   assert.equal(home.timers.size, 3, "Only the latest navigation retry generation may remain queued.");

@@ -41,7 +41,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.2";
+const SKIN_VERSION = "1.0.3";
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]"]);
 const CDP_ID_PATTERN = /^[A-Za-z0-9._-]{1,200}$/;
 const MAX_ART_BYTES = 16 * 1024 * 1024;
@@ -923,7 +923,7 @@ async function verifyRemovedSession(session) {
   })()`);
 }
 
-async function verifySession(session, expectedThemeId = null, expectedRevision = null) {
+export async function verifySession(session, expectedThemeId = null, expectedRevision = null) {
   return session.evaluate(`(() => {
     const box = (node) => {
       if (!node) return null;
@@ -935,11 +935,15 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
         visible: r.width > 0 && r.height > 0 && style.display !== 'none' && style.visibility !== 'hidden',
       };
     };
-    const homeIndicator = document.querySelector(${selectorLiteral("home-icon")});
-    const homeSignal = homeIndicator ?? document.querySelector(${selectorLiteral("game-source")}) ??
-      document.querySelector(${selectorLiteral("home-suggestions")});
+    // 多个路由可同时保留在 DOM 中，校验必须选取可见副本。
+    const queryVisible = (selector) => [...document.querySelectorAll(selector)]
+      .find((node) => box(node)?.visible && (typeof node.checkVisibility !== 'function' ||
+        node.checkVisibility({ visibilityProperty: true }))) || null;
+    const homeIndicator = queryVisible(${selectorLiteral("home-icon")});
+    const homeSignal = homeIndicator ?? queryVisible(${selectorLiteral("game-source")}) ??
+      queryVisible(${selectorLiteral("home-suggestions")});
     const homeRoute = homeSignal?.closest('[role="main"]') ?? null;
-    const home = document.querySelector(${selectorLiteral("home-route")});
+    const home = queryVisible(${selectorLiteral("home-route")});
     const suggestions = home?.querySelector(${selectorLiteral("home-suggestions")}) ?? null;
     const cardButtons = suggestions ? [...suggestions.querySelectorAll('button')] : [];
     const cardBoxes = cardButtons.map(box);
@@ -961,13 +965,13 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
       item.color === item.expectedColor);
     const hero = box(home?.firstElementChild?.firstElementChild?.firstElementChild);
     const projectButton = box(home?.querySelector(${selectorLiteral("project-selector")} + " > button"));
-    const shell = box(document.querySelector(${selectorLiteral("shell-main")}));
-    const composer = box(document.querySelector(${selectorLiteral("composer-chrome")}));
-    const sidebar = box(document.querySelector(${selectorLiteral("left-panel")}));
-    const header = box(document.querySelector(${selectorLiteral("header-tint")}));
-    const settingsAnchor = box(document.querySelector(${selectorLiteral("settings-panel")}) ||
-      document.querySelector(${selectorLiteral("appearance-radio")}) ||
-      document.querySelector(${stableTestidLiteral("theme-preview")}));
+    const shell = box(queryVisible(${selectorLiteral("shell-main")}));
+    const composer = box(queryVisible(${selectorLiteral("composer-chrome")}));
+    const sidebar = box(queryVisible(${selectorLiteral("left-panel")}));
+    const header = box(queryVisible(${selectorLiteral("header-tint")}));
+    const settingsAnchor = box(queryVisible(${selectorLiteral("settings-panel")}) ||
+      queryVisible(${selectorLiteral("appearance-radio")}) ||
+      queryVisible(${stableTestidLiteral("theme-preview")}));
     const runtime = window.__CODEX_AURORA_SKIN_STATE__;
     const adopted = runtime?.styleMode === 'adopted' &&
       [...document.adoptedStyleSheets].includes(runtime.styleSheet);

@@ -174,6 +174,13 @@ html[data-aurora-skin="active"] body::before {
   content: none;
 }
 
+/* 26.1002 的外层 page-surface 会再叠加原生底色；全窗口图片模式只保留
+   主题自己的压暗层，局部卡片与设置页继续使用各自的底色。 */
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="home"] [data-app-shell-page-surface="true"],
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="thread"]:is([data-dream-task-mode="ambient"], [data-dream-task-mode="banner"]) [data-app-shell-page-surface="true"] {
+  background: transparent !important;
+}
+
 html[data-aurora-skin="active"] __DREAM_SELECTOR_LEFT_PANEL__ {
   background:
     linear-gradient(180deg,

@@ -2,6 +2,8 @@
 
 ## Next
 
+- 版本升级到 1.0.3，同步共享 renderer 的 Codex 26.1002 底色兼容与隐藏路由检测修复。
+
 - 版本字段与跨平台发布统一升级到 1.0.2；Windows 运行行为不变。
 - 兼容 Codex 26.810 的新版 main、Header 与 Composer Layout Root，并修复旧
   verifier 在结构缺失时仍将 L0 报告为成功的问题。

@@ -99,6 +99,7 @@ jobs:
       - name: Run portable Node.js regressions
         shell: bash
         run: |
+          node --test tools/*.test.mjs
           node --test macos/tests/*.test.mjs
           node --test windows/tests/*.test.mjs
           node --test manager/*.test.mjs
