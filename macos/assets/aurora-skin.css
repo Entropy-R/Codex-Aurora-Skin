@@ -806,11 +806,10 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"] :is(main:is(.main-su
   background: transparent !important;
 }
 
-/* Codex paints a second opaque fade behind the sticky composer. The composer
-   already owns its readable surface, so retaining this layer creates a false
-   bottom panel and makes the control look duplicated. */
+/* 输入框有自己的可读底色。26.1002 将外围遮罩拆为渐变与底板，
+   selector 合同只命中底部占位和 footer 的装饰子元素，保留输入框及操作提示。 */
 html[data-aurora-skin="active"][data-dream-art-wide="true"] :is(main:is(.main-surface, [data-app-shell-main-surface], [class*="_MainContentSurface_"]), [data-aurora-part="main"])
-  :is(.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary, .thread-scroll-container .bg-gradient-to-t.from-surface.via-surface) {
+  :is(.thread-scroll-container .bg-gradient-to-t.from-token-main-surface-primary, .thread-scroll-container .bg-gradient-to-t.from-surface.via-surface, .thread-scroll-container .pointer-events-none.sticky.bottom-0 > .pointer-events-none.bg-gradient-to-t.from-surface, .thread-scroll-container [data-thread-scroll-footer="true"] > .pointer-events-none.bg-surface) {
   background: transparent !important;
 }
 
