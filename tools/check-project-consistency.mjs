@@ -21,6 +21,14 @@ function readVersion(relativePath) {
   return value;
 }
 
+function readPositiveInteger(relativePath) {
+  const value = read(relativePath).trim();
+  if (!/^[1-9]\d*$/.test(value)) {
+    throw new Error(`${relativePath} must contain a positive integer`);
+  }
+  return value;
+}
+
 function extractVersion(relativePath, pattern, label) {
   const matches = [...read(relativePath).matchAll(pattern)];
   if (matches.length !== 1) {
@@ -30,6 +38,7 @@ function extractVersion(relativePath, pattern, label) {
 }
 
 const expected = readVersion("macos/VERSION");
+const engineBuild = readPositiveInteger("macos/ENGINE_BUILD");
 const versions = new Map([
   ["windows/VERSION", readVersion("windows/VERSION")],
   ["linux/VERSION", readVersion("linux/VERSION")],
@@ -66,6 +75,10 @@ for (const [source, version] of versions) {
   }
 }
 
+if (!read("macos/menubar-app/Resources/Info.plist.template").includes("__BUILD__")) {
+  throw new Error("macOS Info.plist template must use the engine build placeholder");
+}
+
 const sync = spawnSync(
   process.execPath,
   [path.join(toolsRoot, "sync-runtime-assets.mjs"), "--check"],
@@ -81,4 +94,4 @@ if (sync.status !== 0) {
   throw new Error("shared runtime assets are not synchronized");
 }
 
-console.log(`PASS: project version ${expected} and shared runtime assets are consistent.`);
+console.log(`PASS: project version ${expected}, engine build ${engineBuild}, and shared runtime assets are consistent.`);

@@ -6,6 +6,7 @@ export LANG=C
 export LC_CTYPE=C
 ROOT="$(cd "$(dirname "$0")/.." && pwd -P)"
 VERSION="$(/usr/bin/tr -d '[:space:]' < "$ROOT/VERSION")"
+ENGINE_BUILD="$(/usr/bin/tr -d '[:space:]' < "$ROOT/ENGINE_BUILD")"
 RELEASE_DIR="$ROOT/release"
 DMG="$RELEASE_DIR/CodexAuroraSkin-v$VERSION.dmg"
 SKIP_TESTS="false"
@@ -57,6 +58,10 @@ MOUNTED_APP="$MOUNT/Codex Aurora Skin.app"
   || { printf 'Mounted app version does not match VERSION.\n' >&2; exit 1; }
 [ "$(/usr/bin/tr -d '[:space:]' < "$MOUNTED_APP/Contents/Resources/engine/VERSION")" = "$VERSION" ] \
   || { printf 'Mounted engine version does not match VERSION.\n' >&2; exit 1; }
+[ "$(/usr/bin/tr -d '[:space:]' < "$MOUNTED_APP/Contents/Resources/engine/ENGINE_BUILD")" = "$ENGINE_BUILD" ] \
+  || { printf 'Mounted engine build does not match ENGINE_BUILD.\n' >&2; exit 1; }
+[ "$(/usr/bin/plutil -extract CFBundleVersion raw -o - "$MOUNTED_APP/Contents/Info.plist")" = "$ENGINE_BUILD" ] \
+  || { printf 'Mounted app build does not match ENGINE_BUILD.\n' >&2; exit 1; }
 [ -f "$MOUNTED_APP/Contents/Resources/LICENSE.txt" ] \
   && [ -f "$MOUNTED_APP/Contents/Resources/NOTICE.md" ] \
   || { printf 'Mounted app is missing license notices.\n' >&2; exit 1; }

@@ -19,6 +19,7 @@ done < <(find "$ROOT/scripts" "$REPOSITORY_ROOT/manager" \
   -type f \( -name '*.mjs' -o -name '*.js' \) -print)
 
 "$NODE" --test "$ROOT"/tests/*.test.mjs
+"$ROOT/tests/linux-process-identity.test.sh"
 "$NODE" --test "$REPOSITORY_ROOT"/manager/*.test.mjs
 CODEX_AURORA_SKIN_ASSETS_ROOT="$REPOSITORY_ROOT/macos/assets" \
   "$NODE" "$ROOT/scripts/injector.mjs" --check-payload \

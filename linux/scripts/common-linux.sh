@@ -155,13 +155,12 @@ discover_chatgpt() {
 }
 
 chatgpt_pids() {
-  local proc pid actual
+  local proc pid
   [ -n "${CHATGPT_EXE:-}" ] || return 0
   for proc in /proc/[0-9]*; do
     [ -r "$proc/exe" ] || continue
     pid="${proc##*/}"
-    actual="$(readlink -f "$proc/exe" 2>/dev/null || true)"
-    [ "$actual" = "$CHATGPT_EXE" ] && printf '%s\n' "$pid"
+    process_executable_matches_path "$pid" "$CHATGPT_EXE" && printf '%s\n' "$pid"
   done
 }
 
@@ -175,9 +174,22 @@ process_start_ticks() {
   sed 's/^.*) //' "/proc/$pid/stat" | awk '{print $20}'
 }
 
+process_executable_matches_path() {
+  local pid="$1" expected_path="$2" actual_path canonical_path
+  actual_path="$(readlink "/proc/$pid/exe" 2>/dev/null || true)"
+  canonical_path="$(readlink -f "$expected_path" 2>/dev/null || true)"
+  [ -n "$actual_path" ] && [ -n "$canonical_path" ] || return 1
+  # 软件包升级会替换正在使用的文件；Linux 会在旧进程的原路径后标注
+  # " (deleted)"。只接受记录路径的这一精确形式，不放宽到其他文件。
+  case "$actual_path" in
+    "$canonical_path"|"$canonical_path (deleted)") return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 pid_is_chatgpt() {
   local pid="$1"
-  [ "$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)" = "$CHATGPT_EXE" ]
+  process_executable_matches_path "$pid" "$CHATGPT_EXE"
 }
 
 listener_pids() {
@@ -356,10 +368,9 @@ mark_state_active() {
 
 recorded_injector_matches() {
   local pid="$1" expected_start="$2" expected_node="$3" expected_injector="$4" expected_port="$5"
-  local actual_start actual_node command_line
+  local actual_start command_line
   [ -r "/proc/$pid/cmdline" ] || return 1
-  actual_node="$(readlink -f "/proc/$pid/exe" 2>/dev/null || true)"
-  [ "$actual_node" = "$(readlink -f "$expected_node")" ] || return 1
+  process_executable_matches_path "$pid" "$expected_node" || return 1
   actual_start="$(process_start_ticks "$pid")"
   [ -n "$actual_start" ] && [ "$actual_start" = "$expected_start" ] || return 1
   command_line="$(tr '\0' '\n' < "/proc/$pid/cmdline")"

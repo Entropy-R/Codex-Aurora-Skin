@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import fs from "node:fs/promises";
-import { gradeDoctorResult, pageDoctor, selectorMatchesScope } from "./doctor-selectors.mjs";
+import {
+  gradeDoctorResult,
+  orderCodexAppTargets,
+  pageDoctor,
+  selectorMatchesScope,
+} from "./doctor-selectors.mjs";
 
 const contract = JSON.parse(await fs.readFile(new URL("./selectors.json", import.meta.url), "utf8"));
 const resultFor = (baseState, hits, overlay = false) => gradeDoctorResult(contract, {
@@ -86,5 +91,16 @@ assert.equal(gradeDoctorResult(contract, unknownPage).pass, false);
 assert.equal(selectorMatchesScope("home+thread", { baseState: "thread", overlay: false }), true);
 assert.equal(selectorMatchesScope("home config", { baseState: "home", overlay: false }), true);
 assert.equal(selectorMatchesScope("overlay", { baseState: "home", overlay: true }), true);
+
+const orderedTargets = orderCodexAppTargets([
+  { id: "detached", url: "app://-/detached-window.html?initialRoute=%2Fdetached-window" },
+  { id: "avatar", url: "app://-/index.html?initialRoute=%2Favatar-overlay" },
+  { id: "main", url: "app://-/index.html" },
+]);
+assert.deepEqual(
+  orderedTargets.map(({ id }) => id),
+  ["main", "avatar", "detached"],
+  "Selector doctor must inspect the primary Codex window before auxiliary app pages.",
+);
 
 console.log("PASS: selector doctor applies state scopes and L1 grading.");

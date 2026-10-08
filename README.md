@@ -29,8 +29,8 @@ Codex Aurora Skin 是面向 Windows、macOS 与 Linux 的非官方 Codex 桌面�
 - 校验文件：`SHA256SUMS.txt`
 
 不同版本包含的公开构件可能不同，请以对应 Release 的 Assets 列表为准。Linux
-首版代码已合入 `main`，安装包发布在
-[Linux v1.0.1 预览版](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.1)；
+安装包发布在
+[Linux v1.0.2 预览版](https://github.com/Entropy-R/Codex-Aurora-Skin/releases/tag/linux-v1.0.2)；
 也可以按下文从源码安装。Linux 包尚未完成全部受支持发行版和 ARM64 实机验收，
 因此当前作为预览版提供。
 
@@ -38,10 +38,9 @@ Codex Aurora Skin 是面向 Windows、macOS 与 Linux 的非官方 Codex 桌面�
 公证，首次打开时需要在“系统设置 → 隐私与安全性”中确认“仍要打开”。
 产品只在用户手动启动时运行，不创建登录启动项，也不会联网检查更新。
 
-`v1.0.1` 修复了新建任务输入框在部分窗口尺寸下超出可视区域的问题，兼容
-Codex 26.810 的新版主区域、Header 与 Composer 结构，并改善 macOS 休眠唤醒
-后的管理器心跳和皮肤连接恢复。浏览器管理器断开时会提示重新打开 App，不再
-直接显示 `Failed to fetch`。
+`v1.0.2` 阻止新版 macOS 启动器被旧构建降级覆盖，并确保一次性注入发生异常时
+及时关闭 CDP 连接，不再长时间停留在“正在应用皮肤”。它继续包含 `v1.0.1`
+对 Codex 26.810+ 主区域、Header、Composer 和休眠恢复的兼容修复。
 
 ### macOS 首次使用
 

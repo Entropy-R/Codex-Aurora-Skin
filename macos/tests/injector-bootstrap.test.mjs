@@ -3,7 +3,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import vm from "node:vm";
 import { fileURLToPath } from "node:url";
-import { earlyPayloadFor, structurePassFor } from "../scripts/injector.mjs";
+import {
+  earlyPayloadFor,
+  structurePassFor,
+  withConnectedSessionCleanup,
+} from "../scripts/injector.mjs";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const injectorPath = path.resolve(here, "../scripts/injector.mjs");
@@ -160,5 +164,21 @@ assert.doesNotMatch(source, /scope\?\.level === 'L0'\s*\|\|/,
 assert.match(source, /const l1StructurePass = \["home", "thread"\]\.includes/);
 assert.match(source, /const settingsStructurePass = result\.scope\?\.baseState === "settings"/);
 assert.match(source, /Boolean\(result\.settingsAnchor\?\.visible\)/);
+
+const closedSessions = [];
+await assert.rejects(
+  withConnectedSessionCleanup([
+    { session: { close() { closedSessions.push("first"); } } },
+    { session: { close() { closedSessions.push("second"); } } },
+  ], async () => {
+    throw new Error("simulated one-shot failure");
+  }),
+  /simulated one-shot failure/,
+);
+assert.deepEqual(
+  closedSessions,
+  ["first", "second"],
+  "Every connected CDP session must close when one-shot setup fails before its per-target loop.",
+);
 
 console.log("PASS: early injection is L0-ready, generation-safe, and removed on shutdown.");

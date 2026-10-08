@@ -31,6 +31,9 @@ cp %{_sourcedir}/codex-aurora-skin-restore.desktop \
 %{_datadir}/applications/codex-aurora-skin-restore.desktop
 
 %changelog
+* Sun Sep 20 2026 Entropy-R <Entropy-R@users.noreply.github.com> - 1.0.2-1
+- Keep the Linux package version aligned with the cross-platform release.
+
 * Tue Sep 08 2026 Entropy-R <Entropy-R@users.noreply.github.com> - 1.0.2-1
 - Let code block surfaces follow the shared surface-opacity control.
 

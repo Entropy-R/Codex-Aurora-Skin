@@ -67,13 +67,10 @@ git switch --track origin/codex/v1.0.1-fixes
 - 合并前检查提交元数据、路径、日志和截图，避免提交姓名、邮箱、Token、密钥、
   私人任务或本机绝对路径。
 
-## 当前 v1.0.1 接续关系
+## 版本接续关系
 
-- `codex/macos-v1.0.0-docs` / PR #1：保留 v1.0.0 macOS 文档历史。
-- `codex/v1.0.1-fixes` / PR #2：v1.0.1 版本集成分支，Windows 电脑继续使用此
-  分支。
-- Windows Codex 可直接使用
+- `codex/macos-v1.0.0-docs` / PR #1 与 `codex/v1.0.1-fixes` / PR #2 均为已完成
+  的历史分支；后续修复应从最新 `main` 创建新的版本或单问题分支。
+- v1.0.1 的 Windows 验收过程可参考
   [`WINDOWS_V1.0.1_HANDOFF_PROMPT.md`](./WINDOWS_V1.0.1_HANDOFF_PROMPT.md)
-  中的接续提示词。
-- PR #1 合入 `main` 后，将 PR #2 的目标分支调整为 `main`。
-- Windows 门禁完成前，不合并 PR #2、不创建 `v1.0.1` 标签、不发布 Release。
+  中的历史接续提示词，但不要继续向旧集成分支追加新版本改动。

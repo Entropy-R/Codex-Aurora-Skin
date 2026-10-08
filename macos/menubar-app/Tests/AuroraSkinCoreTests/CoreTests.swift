@@ -28,4 +28,43 @@ final class CoreTests: XCTestCase {
     snapshot.operation = "failed"
     XCTAssertEqual(snapshot.title, "Skin ON · 操作失败")
   }
+
+  func testEngineInstallPolicyPreventsDowngradesAndSameBuildReinstalls() throws {
+    let bundled = try XCTUnwrap(EngineReleaseIdentity(version: "1.0.2", build: "10002"))
+    let same = try XCTUnwrap(EngineReleaseIdentity(version: "1.0.2", build: "10002"))
+    let newerBuild = try XCTUnwrap(EngineReleaseIdentity(version: "1.0.2", build: "10003"))
+    let newerVersion = try XCTUnwrap(EngineReleaseIdentity(version: "1.1.0", build: "11000"))
+    let older = try XCTUnwrap(EngineReleaseIdentity(version: "1.0.1", build: "10001"))
+
+    XCTAssertFalse(EngineInstallPolicy.shouldReplace(
+      installed: same,
+      bundled: bundled,
+      installedComplete: true
+    ))
+    XCTAssertFalse(EngineInstallPolicy.shouldReplace(
+      installed: newerBuild,
+      bundled: bundled,
+      installedComplete: true
+    ))
+    XCTAssertFalse(EngineInstallPolicy.shouldReplace(
+      installed: newerVersion,
+      bundled: bundled,
+      installedComplete: true
+    ))
+    XCTAssertTrue(EngineInstallPolicy.shouldReplace(
+      installed: older,
+      bundled: bundled,
+      installedComplete: true
+    ))
+    XCTAssertTrue(EngineInstallPolicy.shouldReplace(
+      installed: same,
+      bundled: bundled,
+      installedComplete: false
+    ))
+    XCTAssertTrue(EngineInstallPolicy.shouldReplace(
+      installed: nil,
+      bundled: bundled,
+      installedComplete: true
+    ))
+  }
 }

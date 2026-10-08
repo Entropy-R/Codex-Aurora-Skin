@@ -1,4 +1,5 @@
 import AppKit
+import AuroraSkinCore
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
   private let fileManager = FileManager.default
@@ -15,6 +16,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
   private var requiredPaths: [String] {
     [
       "VERSION",
+      "ENGINE_BUILD",
       "assets/aurora-skin.css",
       "assets/renderer-inject.js",
       "assets/selectors.json",
@@ -66,6 +68,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       }
     }
 
+    let bundledIdentity = try engineIdentity(at: bundled)
+    if fileManager.fileExists(atPath: installedEngineURL.path) {
+      let installedComplete = requiredPaths.allSatisfy { relativePath in
+        fileManager.fileExists(
+          atPath: installedEngineURL.appendingPathComponent(relativePath).path
+        )
+      }
+      let installedIdentity = try? engineIdentity(at: installedEngineURL)
+      if !EngineInstallPolicy.shouldReplace(
+        installed: installedIdentity,
+        bundled: bundledIdentity,
+        installedComplete: installedComplete
+      ) {
+        return
+      }
+    }
+
     let parent = installedEngineURL.deletingLastPathComponent()
     try fileManager.createDirectory(
       at: parent,
@@ -98,6 +117,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
       }
       throw error
     }
+  }
+
+  private func engineIdentity(at root: URL) throws -> EngineReleaseIdentity {
+    let version = try String(
+      contentsOf: root.appendingPathComponent("VERSION"),
+      encoding: .utf8
+    )
+    let build = try String(
+      contentsOf: root.appendingPathComponent("ENGINE_BUILD"),
+      encoding: .utf8
+    )
+    guard let identity = EngineReleaseIdentity(version: version, build: build) else {
+      throw CocoaError(.fileReadCorruptFile, userInfo: [
+        NSLocalizedDescriptionKey: "主题引擎版本标识无效。"
+      ])
+    }
+    return identity
   }
 
   private func launchManager() throws {
