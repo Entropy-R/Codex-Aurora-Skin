@@ -33,7 +33,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.3";
+const SKIN_VERSION = "1.0.4";
 const MAX_ART_BYTES = 16 * 1024 * 1024;
 const STRONG_THEME_AUDIT_MS = 30000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
@@ -1021,7 +1021,7 @@ async function verifyRemovedSession(session) {
   })()`);
 }
 
-async function verifySession(session, expectedThemeId = null, expectedRevision = null) {
+export async function verifySession(session, expectedThemeId = null, expectedRevision = null) {
   return session.evaluate(`(() => {
     const box = (node) => {
       if (!node) return null;
@@ -1033,7 +1033,11 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
         visible: r.width > 0 && r.height > 0 && style.display !== 'none' && style.visibility !== 'hidden',
       };
     };
-    const home = document.querySelector(${selectorLiteral("home-route")});
+    // 多个路由可同时保留在 DOM 中，校验必须选取可见副本。
+    const queryVisible = (selector) => [...document.querySelectorAll(selector)]
+      .find((node) => box(node)?.visible && (typeof node.checkVisibility !== 'function' ||
+        node.checkVisibility({ visibilityProperty: true }))) || null;
+    const home = queryVisible(${selectorLiteral("home-route")});
     const suggestions = home?.querySelector(${selectorLiteral("home-suggestions")}) ?? null;
     const cards = suggestions ? [...suggestions.querySelectorAll('button')].map(box) : [];
     const runtime = window.__CODEX_AURORA_SKIN_STATE__;
@@ -1057,13 +1061,13 @@ async function verifySession(session, expectedThemeId = null, expectedRevision =
       suggestionsPresent: Boolean(suggestions),
       hero: box(home?.firstElementChild?.firstElementChild?.firstElementChild),
       cards,
-      composer: box(document.querySelector(${selectorLiteral("composer-chrome")})),
-      shell: box(document.querySelector(${selectorLiteral("shell-main")})),
-      sidebar: box(document.querySelector(${selectorLiteral("left-panel")})),
-      header: box(document.querySelector(${selectorLiteral("header-tint")})),
-      settingsAnchor: box(document.querySelector(${selectorLiteral("settings-panel")}) ||
-        document.querySelector(${selectorLiteral("appearance-radio")}) ||
-        document.querySelector(${stableTestidLiteral("theme-preview")})),
+      composer: box(queryVisible(${selectorLiteral("composer-chrome")})),
+      shell: box(queryVisible(${selectorLiteral("shell-main")})),
+      sidebar: box(queryVisible(${selectorLiteral("left-panel")})),
+      header: box(queryVisible(${selectorLiteral("header-tint")})),
+      settingsAnchor: box(queryVisible(${selectorLiteral("settings-panel")}) ||
+        queryVisible(${selectorLiteral("appearance-radio")}) ||
+        queryVisible(${stableTestidLiteral("theme-preview")})),
       viewport: { width: innerWidth, height: innerHeight },
       documentOverflow: {
         x: document.documentElement.scrollWidth > document.documentElement.clientWidth,

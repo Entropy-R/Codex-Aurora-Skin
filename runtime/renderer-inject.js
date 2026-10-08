@@ -175,6 +175,8 @@
     const root = document.documentElement;
     if (root?.classList?.contains("electron-dark")) return "dark";
     if (root?.classList?.contains("electron-light")) return "light";
+    const nativeTheme = root?.getAttribute("data-theme");
+    if (nativeTheme === "dark" || nativeTheme === "light") return nativeTheme;
     try { return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } catch {}
     return "light";
   };
@@ -551,13 +553,13 @@
   const selectorHit = (key) => {
     const selector = selectorByKey.get(key)?.selector;
     if (!selector) return false;
-    try { return Boolean(document.querySelector(selector)); } catch { return false; }
+    return Boolean(queryOne(selector));
   };
 
   const stableTestidHit = (testid) => {
     const selector = stableTestidSelector(testid);
     if (!selector) return false;
-    try { return Boolean(document.querySelector(selector)); } catch { return false; }
+    return Boolean(queryOne(selector));
   };
 
   const queryAll = (selector) => {
@@ -565,7 +567,17 @@
   };
 
   const queryOne = (selector) => {
-    try { return document.querySelector(selector); } catch { return null; }
+    // 新版保留隐藏路由；仅在低频路由协调时检查可见性，不扫描整棵 DOM。
+    return queryAll(selector).find((node) => {
+      if (typeof node.checkVisibility === "function") {
+        return node.checkVisibility({ visibilityProperty: true });
+      }
+      for (let current = node; current; current = current.parentElement) {
+        const style = getComputedStyle(current);
+        if (style.display === "none" || style.visibility === "hidden" || style.visibility === "collapse") return false;
+      }
+      return true;
+    }) || null;
   };
 
   const selectorNode = (key) => {

@@ -55,7 +55,7 @@ assert.match(selectorFor("thread-composer-fade"), /\.pointer-events-none\.sticky
 assert.match(selectorFor("thread-composer-fade"), /\[data-thread-scroll-footer="true"\] > \.pointer-events-none\.bg-surface/,
   "26.1002 的独立底板必须透明化，不能覆盖输入框自身表面。");
 
-const pageResultFor = (hits) => {
+const pageResultFor = (hits, hiddenHits = []) => {
   const hitSet = new Set(hits);
   const originalDocument = globalThis.document;
   const originalMatchMedia = globalThis.matchMedia;
@@ -66,9 +66,10 @@ const pageResultFor = (hits) => {
     },
     querySelectorAll(selector) {
       const contractKey = contract.selectors.find((entry) => entry.selector === selector)?.key;
-      if (contractKey && hitSet.has(contractKey)) return [{}];
+      if (contractKey && hiddenHits.includes(contractKey)) return [{ checkVisibility: () => false }];
+      if (contractKey && hitSet.has(contractKey)) return [{ checkVisibility: () => true }];
       const testid = /^\[data-testid="([^"]+)"\]$/.exec(selector)?.[1];
-      return testid && hitSet.has(`testid:${testid}`) ? [{}] : [];
+      return testid && hitSet.has(`testid:${testid}`) ? [{ checkVisibility: () => true }] : [];
     },
   };
   globalThis.matchMedia = () => ({ matches: false });
@@ -83,6 +84,11 @@ const pageResultFor = (hits) => {
 const codex26810 = pageResultFor(["shell-main", "left-panel", "header-tint", "composer-chrome"]);
 assert.equal(codex26810.baseState, "thread");
 assert.equal(gradeDoctorResult(contract, codex26810).pass, true);
+
+const retainedHome = pageResultFor(
+  ["shell-main", "left-panel", "header-tint"], ["home-icon", "home-route", "home-route-css"],
+);
+assert.equal(retainedHome.baseState, "thread", "doctor 不得使用隐藏首页作为当前路由证据。");
 
 const modernSettings = pageResultFor(["settings-panel"]);
 assert.equal(modernSettings.baseState, "settings");

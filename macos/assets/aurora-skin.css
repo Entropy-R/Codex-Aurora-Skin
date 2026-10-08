@@ -174,6 +174,13 @@ html[data-aurora-skin="active"] body::before {
   content: none;
 }
 
+/* 26.1002 的外层 page-surface 会再叠加原生底色；全窗口图片模式只保留
+   主题自己的压暗层，局部卡片与设置页继续使用各自的底色。 */
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="home"] [data-app-shell-page-surface="true"],
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="thread"]:is([data-dream-task-mode="ambient"], [data-dream-task-mode="banner"]) [data-app-shell-page-surface="true"] {
+  background: transparent !important;
+}
+
 html[data-aurora-skin="active"] :is(aside.app-shell-left-panel, [data-aurora-part="sidebar"]) {
   background:
     linear-gradient(180deg,
@@ -338,7 +345,7 @@ html[data-aurora-skin="active"]:is([data-dream-task-mode="ambient"], [data-dream
 }
 
 html[data-aurora-skin="active"]:is([data-dream-task-mode="ambient"], [data-dream-art-task-mode="ambient"], [data-dream-task-mode="banner"], [data-dream-art-task-mode="banner"])[data-dream-art-wide="true"][data-dream-shell-present="true"]:not([data-dream-route="home"])
-  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) {
+  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) {
   background: var(--ds-immersive-composer-solid) !important;
   border: 0 !important;
   box-shadow:
@@ -571,7 +578,7 @@ html[data-aurora-skin="active"][data-dream-route="home"] [role="main"] .group\/h
 html[data-aurora-skin="active"][data-dream-route="home"] [role="main"] .group\/home-suggestions button > span:first-child { justify-content: center !important; }
 html[data-aurora-skin="active"][data-dream-route="home"] [role="main"] .group\/home-suggestions button > span:last-child { align-items: center !important; text-align: center !important; }
 
-html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) {
+html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) {
   overflow: visible !important;
   border: 1px solid rgb(var(--ds-muted-rgb) / .18) !important;
   border-radius: 22px !important;
@@ -580,7 +587,7 @@ html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer
   backdrop-filter: blur(16px) saturate(108%) !important;
 }
 
-html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"])::before { content: none !important; }
+html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"])::before { content: none !important; }
 
 /* A wide image can carry the home screen too. The native hero remains live,
    but the artwork is painted once on the window instead of repeated in a card. */
@@ -650,7 +657,7 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-route="ho
   backdrop-filter: blur(8px) saturate(104%) !important;
 }
 
-html[data-aurora-skin="active"][data-dream-art-wide="true"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) {
+html[data-aurora-skin="active"][data-dream-art-wide="true"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) {
   background: var(--ds-immersive-composer-solid) !important;
   border: 0 !important;
   box-shadow:
@@ -661,7 +668,7 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"] :is(:is(.composer-su
 }
 
 html[data-aurora-skin="active"][data-dream-shell="light"][data-dream-art-wide="true"]
-  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) {
+  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) {
   box-shadow:
     0 10px 28px rgb(var(--ds-bg-rgb) / .14),
     inset 0 0 0 1px var(--ds-immersive-line),
@@ -670,7 +677,7 @@ html[data-aurora-skin="active"][data-dream-shell="light"][data-dream-art-wide="t
 }
 
 html[data-aurora-skin="active"][data-dream-shell="light"]
-  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) p.placeholder::after {
+  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) p.placeholder::after {
   color: rgb(var(--ds-muted-rgb) / .78) !important;
   opacity: 1 !important;
 }
@@ -693,7 +700,7 @@ html[data-aurora-skin="active"] [class*="_homeUtilityBar_"] {
 }
 
 html[data-aurora-skin="active"][data-dream-route="home"][data-dream-home-utility="true"] [role="main"]
-  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) {
+  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) {
   border: 0 !important;
   border-radius: 0 0 22px 22px !important;
   box-shadow:
@@ -713,7 +720,7 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"] [class*="_homeUtilit
 }
 
 html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-route="home"][data-dream-home-utility="true"]
-  [role="main"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) {
+  [role="main"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) {
   box-shadow:
     0 10px 30px rgb(var(--ds-bg-rgb) / .20),
     inset 1px 0 var(--ds-immersive-line),
@@ -731,27 +738,27 @@ html[data-aurora-skin="active"][data-dream-shell="light"][data-dream-art-wide="t
 }
 
 html[data-aurora-skin="active"] [class*="_homeUtilityBar_"] button,
-html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) button:not([class~="bg-token-foreground"]) {
+html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) button:not([class~="bg-token-foreground"]) {
   color: var(--ds-muted) !important;
 }
 
 html[data-aurora-skin="active"] [class*="_homeUtilityBar_"] button svg,
-html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) button svg {
+html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) button svg {
   color: currentColor !important;
 }
 
 html[data-aurora-skin="active"] [class*="_homeUtilityBar_"] button *,
-html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) button:not([class~="bg-token-foreground"]) * {
+html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) button:not([class~="bg-token-foreground"]) * {
   color: currentColor !important;
 }
 
 html[data-aurora-skin="active"] [class*="_homeUtilityBar_"] button:hover,
-html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) button:not([class~="bg-token-foreground"]):hover {
+html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) button:not([class~="bg-token-foreground"]):hover {
   color: var(--ds-text) !important;
   background: rgb(var(--ds-accent-rgb) / .10) !important;
 }
 
-html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) p.placeholder::after {
+html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) p.placeholder::after {
   color: rgb(var(--ds-muted-rgb) / .82) !important;
   opacity: 1 !important;
 }
@@ -759,9 +766,9 @@ html[data-aurora-skin="active"] :is(:is(.composer-surface-chrome, [data-composer
 /* 26.810 将稳定输入框表面移到 LayoutRoot；首页内部 Body 与 Footer 必须透明，
    不能重新覆盖已经着色的 Root。 */
 html[data-aurora-skin="active"][data-dream-route="home"]
-  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) > [class*="_ComposerLayoutBody_"],
+  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) > [class*="_ComposerLayoutBody_"],
 html[data-aurora-skin="active"][data-dream-route="home"]
-  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant]), [data-aurora-part="composer"]) :is(:is(.composer-toolbar, [data-composer-footer-responsive], [class*="_ComposerLayoutFooter_"]), [data-aurora-part="composer-toolbar"]) {
+  :is(:is(.composer-surface-chrome, [data-composer-surface-variant][data-composer-radius-variant], [class*="_ComposerLayoutRoot_"]), [data-aurora-part="composer"]) :is(:is(.composer-toolbar, [data-composer-footer-responsive], [class*="_ComposerLayoutFooter_"]), [data-aurora-part="composer-toolbar"]) {
   background: transparent !important;
 }
 

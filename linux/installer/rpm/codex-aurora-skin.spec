@@ -1,5 +1,5 @@
 Name: codex-aurora-skin
-Version: 1.0.3
+Version: 1.0.4
 Release: 1%{?dist}
 Summary: Local theme manager for ChatGPT Codex on Linux
 License: MIT
@@ -31,6 +31,9 @@ cp %{_sourcedir}/codex-aurora-skin-restore.desktop \
 %{_datadir}/applications/codex-aurora-skin-restore.desktop
 
 %changelog
+* Thu Oct 08 2026 Entropy-R <Entropy-R@users.noreply.github.com> - 1.0.4-1
+- Update shared renderer compatibility for Codex 26.1002.
+
 * Sun Sep 20 2026 Entropy-R <Entropy-R@users.noreply.github.com> - 1.0.2-1
 - Keep the Linux package version aligned with the cross-platform release.
 

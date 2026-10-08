@@ -44,11 +44,11 @@ requires explicit approval in System Settings > Privacy & Security. The product
 starts only when requested, does not create a login item, and does not check
 for updates online.
 
-Version `v1.0.1` fixes the composer overflow in some window sizes, supports the
-Codex 26.810 main-area, header, and composer structure, and improves manager
-heartbeat and theme reconnection after macOS sleep. The browser manager now
-prompts users to reopen the app instead of showing `Failed to fetch` when it is
-disconnected.
+Version `v1.0.3` removes the native outer background introduced in Codex 26.1002
+that darkened full-window wallpapers, and ignores retained hidden routes when
+detecting and verifying the active page. Existing brightness and opacity
+settings are preserved. It also retains the `v1.0.2` engine-upgrade and session
+cleanup fixes.
 
 ### First use on macOS
 
