@@ -783,6 +783,7 @@ try {
     'Wait-AuroraSkinCodexDebugArgumentStatus',
     'Start-AuroraSkinCodexDirect',
     'Stop-AuroraSkinCodex',
+    'Get-AuroraSkinVerifiedCdpIdentity',
     'Get-AuroraSkinCodexProcesses'
   )
   $originalLauncherFunctions = @{}
@@ -790,6 +791,7 @@ try {
     $originalLauncherFunctions[$functionName] = (Get-Command $functionName -CommandType Function).ScriptBlock
   }
   try {
+    Set-Item 'function:Get-AuroraSkinVerifiedCdpIdentity' -Value { param($Port, $Codex) return $null }
     Set-Item 'function:Start-AuroraSkinCodex' -Value { param($Codex, $Arguments) return 101 }
     Set-Item 'function:Wait-AuroraSkinCodexDebugArgumentStatus' -Value { param($Codex, $Port) return 'forwarded' }
     Set-Item 'function:Start-AuroraSkinCodexDirect' -Value { throw 'Direct fallback must not run for compatible package activation.' }
@@ -819,12 +821,35 @@ try {
       $uninspectableLaunch.ArgumentStatus -cne 'uninspectable') {
       throw 'An uninspectable package process was not kept on the conservative package-activation path.'
     }
-    Set-Item 'function:Wait-AuroraSkinCodexDebugArgumentStatus' -Value { param($Codex, $Port) return 'not-forwarded' }
+    $script:dreamSkinDebugStatusCall = 0
+    Set-Item 'function:Wait-AuroraSkinCodexDebugArgumentStatus' -Value {
+      param($Codex, $Port)
+      $script:dreamSkinDebugStatusCall += 1
+      if ($script:dreamSkinDebugStatusCall -eq 1) { return 'not-forwarded' }
+      return 'forwarded'
+    }
+    Set-Item 'function:Start-AuroraSkinCodexDirect' -Value { param($Codex, $Arguments) return 202 }
     $notForwardedLaunch = Start-AuroraSkinCodexForDebugging -Codex $fakeInstall `
       -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @()
-    if ($notForwardedLaunch.Strategy -cne 'package-activation' -or
-      $notForwardedLaunch.ArgumentStatus -cne 'not-forwarded') {
-      throw 'A command-line observation without explicit protocol redirection triggered an unsafe fallback.'
+    if ($notForwardedLaunch.Strategy -cne 'direct-store-executable' -or
+      $notForwardedLaunch.PackageArgumentStatus -cne 'not-forwarded' -or
+      $notForwardedLaunch.ProcessId -ne 202 -or $script:dreamSkinDebugStatusCall -ne 2) {
+      throw 'Dropped CDP arguments did not trigger exactly one validated direct launch.'
+    }
+
+    Set-Item 'function:Wait-AuroraSkinCodexDebugArgumentStatus' -Value { param($Codex, $Port) return 'not-forwarded' }
+    Set-Item 'function:Get-AuroraSkinVerifiedCdpIdentity' -Value { param($Port, $Codex) return @{ BrowserId = 'verified-browser' } }
+    Set-Item 'function:Start-AuroraSkinCodexDirect' -Value { throw 'A verified endpoint must not be restarted.' }
+    Set-Item 'function:Stop-AuroraSkinCodex' -Value { throw 'A verified endpoint must not be stopped.' }
+    $verifiedLaunch = Start-AuroraSkinCodexForDebugging -Codex $fakeInstall `
+      -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @(10, 30)
+    if ($verifiedLaunch.Strategy -cne 'package-activation') {
+      throw 'A working endpoint was discarded because its command line lacked the CDP flag.'
+    }
+    Set-Item 'function:Get-AuroraSkinVerifiedCdpIdentity' -Value { param($Port, $Codex) return $null }
+    Set-Item 'function:Stop-AuroraSkinCodex' -Value {
+      param($Codex, [int[]]$PreserveProcessIds, [switch]$AllowForce)
+      if (($PreserveProcessIds -join ',') -cne '10,30') { throw 'Fallback did not preserve pre-existing processes.' }
     }
 
     $script:dreamSkinDebugStatusCall = 0
@@ -836,7 +861,7 @@ try {
     }
     Set-Item 'function:Start-AuroraSkinCodexDirect' -Value { param($Codex, $Arguments) return 202 }
     $fallbackLaunch = Start-AuroraSkinCodexForDebugging -Codex $fakeInstall `
-      -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @()
+      -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @(10, 30)
     if ($fallbackLaunch.ProcessId -ne 202 -or $fallbackLaunch.Strategy -cne 'direct-store-executable' -or
       $fallbackLaunch.PackageArgumentStatus -cne 'protocol-redirected') {
       throw 'owl protocol redirection did not use the validated direct Store executable fallback.'
@@ -852,10 +877,10 @@ try {
     $directArgumentFailureReported = $false
     try {
       $null = Start-AuroraSkinCodexForDebugging -Codex $fakeInstall `
-        -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @()
+        -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @(10, 30)
     } catch {
       $directArgumentFailureReported = $_.Exception.Message.Contains(
-        'package activation or validated direct launch')
+        '两种启动方式均未保留')
     }
     if (-not $directArgumentFailureReported) {
       throw 'A direct fallback that also dropped the CDP argument did not fail closed.'
@@ -868,10 +893,10 @@ try {
     $accessDeniedReported = $false
     try {
       $null = Start-AuroraSkinCodexForDebugging -Codex $fakeInstall `
-        -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @()
+        -Arguments @('--remote-debugging-port=9335') -Port 9335 -PreserveProcessIds @(10, 30)
     } catch {
       $accessDeniedReported = $_.Exception.Message.Contains('(access-denied)') -and
-        $_.Exception.Message.Contains('protected app package')
+        $_.Exception.Message.Contains('无法启用主题')
     }
     if (-not $accessDeniedReported) { throw 'A blocked direct Store launch did not produce the compatibility error.' }
   } finally {

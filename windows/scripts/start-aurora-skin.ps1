@@ -1,4 +1,4 @@
-[CmdletBinding()]
+﻿[CmdletBinding()]
 param(
   [int]$Port = 9335,
   [switch]$RestartExisting,
@@ -146,13 +146,13 @@ try {
       $argumentStatus = Get-AuroraSkinCodexDebugArgumentStatus `
         -Processes @(Get-AuroraSkinCodexProcesses -Codex $codex) -Port $Port
       if ($argumentStatus -eq 'protocol-redirected') {
-        throw "Codex $($codex.Version) converted the CDP argument into a codex:// navigation path instead of opening a debugging endpoint."
+        throw "Codex $($codex.Version) 将主题启动参数改写为导航地址，未开放调试端口，无法启用主题。Codex 可继续使用默认外观。"
       }
       if ((Get-Date) -ge $deadline) {
         if ($null -ne $debugLaunch -and $debugLaunch.Strategy -eq 'direct-store-executable') {
-          throw "The validated direct Store executable fallback did not expose a verified loopback CDP endpoint on port $Port within 45 seconds. Codex $($codex.Version) may disable CDP in this production runtime; no protected app files or permissions were changed."
+          throw "Codex $($codex.Version) 直接启动后，45 秒内仍未开放可验证的调试端口 $Port，无法启用主题。Codex 可继续使用默认外观；请等待 Aurora Skin 兼容更新。"
         }
-        throw "Codex did not expose a verified loopback CDP endpoint on port $Port within 45 seconds."
+        throw "Codex $($codex.Version) 启动后，45 秒内未开放可验证的调试端口 $Port，无法启用主题。Codex 可继续使用默认外观。"
       }
       Start-Sleep -Milliseconds 400
       $cdpIdentity = Get-AuroraSkinVerifiedCdpIdentity -Port $Port -Codex $codex
@@ -330,6 +330,13 @@ try {
   }
 
   Write-Host "Codex Aurora Skin is active on verified loopback port $Port."
+} catch {
+  # 管理器读取结构化错误，避免将 PowerShell 命令和堆栈作为用户提示。
+  [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+  [Console]::Out.WriteLine('AURORA_START_ERROR=' + (
+    @{ message = $_.Exception.Message } | ConvertTo-Json -Compress
+  ))
+  throw
 } finally {
   if ($null -ne $operationLock) { Exit-AuroraSkinOperationLock -Mutex $operationLock }
 }

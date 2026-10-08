@@ -1,4 +1,4 @@
-. (Join-Path $PSScriptRoot 'config-utf8.ps1')
+﻿. (Join-Path $PSScriptRoot 'config-utf8.ps1')
 
 function Enter-AuroraSkinOperationLock {
   $sid = [System.Security.Principal.WindowsIdentity]::GetCurrent().User.Value
@@ -633,7 +633,9 @@ function Start-AuroraSkinCodexForDebugging {
   }
   $packageProcessId = Start-AuroraSkinCodex -Codex $Codex -Arguments $Arguments
   $packageStatus = Wait-AuroraSkinCodexDebugArgumentStatus -Codex $Codex -Port $Port
-  if ($packageStatus -ne 'protocol-redirected') {
+  # 参数丢失也需要尝试直接启动；已有有效端口时不因命令行缺少参数而重启。
+  if ($packageStatus -notin @('protocol-redirected', 'not-forwarded') -or
+    $null -ne (Get-AuroraSkinVerifiedCdpIdentity -Port $Port -Codex $Codex)) {
     return [pscustomobject]@{
       ProcessId = $packageProcessId
       Strategy = 'package-activation'
@@ -653,18 +655,19 @@ function Start-AuroraSkinCodexForDebugging {
   } catch {
     $failureKind = Get-AuroraSkinDirectLaunchFailureKind -Exception $_.Exception
     throw [System.InvalidOperationException]::new(
-      "Codex $($Codex.Version) converted the CDP argument into a codex:// navigation path. Direct launch of the validated Store executable failed ($failureKind), so this Codex/Windows combination cannot expose the Aurora Skin debugging endpoint without modifying the protected app package.",
+      "Codex $($Codex.Version) 未保留主题所需的启动参数，直接启动失败 ($failureKind)，无法启用主题。Codex 可继续使用默认外观。",
       $_.Exception)
   }
 
   $directStatus = Wait-AuroraSkinCodexDebugArgumentStatus -Codex $Codex -Port $Port
-  if ($directStatus -in @('protocol-redirected', 'not-forwarded')) {
+  if ($directStatus -in @('protocol-redirected', 'not-forwarded') -and
+    $null -eq (Get-AuroraSkinVerifiedCdpIdentity -Port $Port -Codex $Codex)) {
     try {
       Stop-AuroraSkinCodex -Codex $Codex -PreserveProcessIds $preservedProcessIds -AllowForce
     } catch {
       throw "Direct Codex launch did not retain the CDP arguments and could not be closed safely: $($_.Exception.Message)"
     }
-    throw "Codex $($Codex.Version) did not retain the CDP argument during package activation or validated direct launch. Aurora Skin cannot run without modifying the protected app package."
+    throw "Codex $($Codex.Version) 的两种启动方式均未保留主题所需的启动参数，无法启用主题。Codex 可继续使用默认外观；请等待 Aurora Skin 兼容更新。"
   }
 
   return [pscustomobject]@{

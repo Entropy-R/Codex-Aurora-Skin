@@ -4,6 +4,7 @@ import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { spawn } from "node:child_process";
+import http from "node:http";
 import { fileURLToPath } from "node:url";
 
 const managerRoot = path.dirname(fileURLToPath(import.meta.url));
@@ -31,6 +32,13 @@ function waitForUrl(child) {
 
 test("本地管理 API 校验 Host、令牌并返回离线目录", async (t) => {
   const stateRoot = await fs.mkdtemp(path.join(os.tmpdir(), "aurora-skin-server-"));
+  const startScript = path.join(stateRoot, "start-fixture.ps1");
+  const startupFailure = "Codex 26.1002.7124.0 无法启用主题。Codex 可继续使用默认外观。";
+  await fs.writeFile(startScript, `\uFEFF
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+[Console]::Out.WriteLine('AURORA_START_ERROR=' + (@{ message = '${startupFailure}' } | ConvertTo-Json -Compress))
+exit 1
+`, "utf8");
   const child = spawn(process.execPath, [
     path.join(managerRoot, "server.mjs"),
     "--platform", "windows",
@@ -39,7 +47,7 @@ test("本地管理 API 校验 Host、令牌并返回离线目录", async (t) => 
     "--active-root", path.join(stateRoot, "active-theme"),
     "--node", process.execPath,
     "--injector", path.join(repositoryRoot, "windows", "scripts", "injector.mjs"),
-    "--start", path.join(repositoryRoot, "windows", "scripts", "start-aurora-skin.ps1"),
+    "--start", startScript,
     "--restore", path.join(repositoryRoot, "windows", "scripts", "restore-aurora-skin.ps1"),
   ], { stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
   t.after(async () => {
@@ -76,6 +84,48 @@ test("本地管理 API 校验 Host、令牌并返回离线目录", async (t) => 
   assert.equal(payload.activeThemeId, "preset-red-white-abstract");
 
   const headers = { Authorization: `Bearer ${token}` };
+  // 更新后的旧 Browser ID 不得被新的 CDP 会话冒用。
+  const cdp = http.createServer((_request, response) => {
+    response.setHeader("Content-Type", "application/json");
+    response.end(JSON.stringify({
+      webSocketDebuggerUrl: `ws://127.0.0.1:${cdp.address().port}/devtools/browser/new-browser`,
+    }));
+  });
+  await new Promise((resolve) => cdp.listen(0, "127.0.0.1", resolve));
+  t.after(() => cdp.listening ? new Promise((resolve) => cdp.close(resolve)) : undefined);
+  const statePath = path.join(stateRoot, "state.json");
+  await fs.writeFile(statePath, JSON.stringify({ port: cdp.address().port, browserId: "old-browser" }));
+  const stale = await fetch(`${base}/api/bootstrap`, { headers });
+  const stalePayload = await stale.json();
+  assert.equal(stalePayload.session.state, "stale");
+  assert.equal(stalePayload.session.active, false);
+  assert.equal(stalePayload.session.canRestart, true);
+  await fs.writeFile(statePath, JSON.stringify({ port: cdp.address().port, browserId: "new-browser" }));
+  const active = await fetch(`${base}/api/bootstrap`, { headers });
+  assert.equal((await active.json()).session.active, true);
+  await fs.writeFile(statePath, JSON.stringify({ port: cdp.address().port, browserId: "old-browser" }));
+  await new Promise((resolve) => cdp.close(resolve));
+  const ended = await fetch(`${base}/api/heartbeat`, { method: "POST", headers, body: "{}" });
+  assert.equal((await ended.json()).session.state, "stale");
+  // 其余 API 测试使用尚未启动的会话，避免访问任何真实 Codex 进程。
+  await fs.writeFile(statePath, "null");
+  if (process.platform === "win32") {
+    const rejectedStart = await fetch(`${base}/api/session/start`, {
+      method: "POST", headers,
+      body: JSON.stringify({ confirmRestart: false }),
+    });
+    assert.equal(rejectedStart.status, 400);
+    const failedStart = await fetch(`${base}/api/session/start`, {
+      method: "POST", headers,
+      body: JSON.stringify({ confirmRestart: true }),
+    });
+    assert.equal(failedStart.status, 400);
+    const failurePayload = await failedStart.json();
+    assert.equal(failurePayload.error, startupFailure);
+    assert.doesNotMatch(failurePayload.error, /powershell\.exe|Command failed/);
+    const afterFailure = await fetch(`${base}/api/bootstrap`, { headers });
+    assert.equal((await afterFailure.json()).ok, true);
+  }
   const form = new FormData();
   form.append("name", "接口导入主题");
   form.append("image", new Blob([await fs.readFile(path.join(

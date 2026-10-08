@@ -21,6 +21,11 @@ pwsh -NoProfile -File windows/tests/installer-static.tests.ps1
 `%LOCALAPPDATA%\CodexAuroraSkin`。卸载前会恢复官方外观，用户主题、图片和覆盖值
 默认保留。
 
+Codex 更新或关闭后，原主题会话会结束。在管理器点击“重新启用主题”恢复；需要
+重启 Codex 时会先请求确认。若新版启动未保留调试参数，启动器会尝试一次经过包
+身份校验的直接启动。仍不可用时显示具体版本和原因，Codex 可以继续使用默认
+外观；此时需等待兼容更新，重复点击不会让不兼容的版本变为可用。
+
 跨电脑继续开发时，请检出已有版本集成分支，不要另建 Windows 副本。当前
 `v1.0.1` Windows 验收使用 `codex/v1.0.1-fixes`；完整规则见
 [`docs/DEVELOPMENT_WORKFLOW.md`](../docs/DEVELOPMENT_WORKFLOW.md)。

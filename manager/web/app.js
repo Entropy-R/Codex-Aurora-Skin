@@ -137,6 +137,17 @@ function themeGroup(title, themes) {
   return section;
 }
 
+function renderSession(session) {
+  elements["session-dot"].className = `status-dot ${session.active ? "active" : session.state === "stale" ? "stale" : ""}`;
+  elements["session-text"].textContent = session.active
+    ? "Codex 主题会话运行中"
+    : session.state === "stale"
+      ? "主题会话已结束（Codex 更新或关闭后需重新启用）"
+      : "Codex 主题会话未启动";
+  elements["start-session"].textContent = session.active
+    ? "重新应用会话" : session.state === "stale" ? "重新启用主题" : "启动主题会话";
+}
+
 async function render() {
   const themes = state.bootstrap?.themes || [];
   elements["theme-sections"].replaceChildren(
@@ -146,12 +157,7 @@ async function render() {
   for (const tab of document.querySelectorAll(".mode-tab")) {
     tab.classList.toggle("active", tab.dataset.mode === state.mode);
   }
-  const session = state.bootstrap?.session || { state: "off" };
-  elements["session-dot"].className = `status-dot ${session.active ? "active" : session.state === "stale" ? "stale" : ""}`;
-  elements["session-text"].textContent = session.active
-    ? "Codex 主题会话运行中"
-    : session.state === "stale" ? "Codex 需要重新连接" : "Codex 主题会话未启动";
-  elements["start-session"].textContent = session.active ? "重新应用会话" : "启动主题会话";
+  renderSession(state.bootstrap?.session || { state: "off" });
   await renderEditor();
 }
 
@@ -316,7 +322,11 @@ elements["import-file"].addEventListener("change", async () => {
 });
 
 setInterval(() => {
-  api("/api/heartbeat", { method: "POST", body: "{}" }).catch(() => {});
+  api("/api/heartbeat", { method: "POST", body: "{}" }).then(({ session }) => {
+    if (state.busy || !state.bootstrap) return;
+    state.bootstrap.session = session;
+    renderSession(session);
+  }).catch(() => {});
 }, 15_000);
 
 refresh({ keepSelection: false }).catch((error) => toast(error.message, true));

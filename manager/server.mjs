@@ -216,12 +216,20 @@ async function runPlatformAction(action) {
     ? ["-NoLogo", "-NoProfile", "-ExecutionPolicy", "RemoteSigned", "-File", script,
       action === "start" ? "-RestartExisting" : "-ForceRestart"]
     : [script, action === "start" ? "--restart-existing" : "--restart-codex"];
-  const result = await execFileAsync(executable, args, {
-    timeout: 150_000,
-    windowsHide: true,
-    maxBuffer: 2 * 1024 * 1024,
-  });
-  return { stdout: result.stdout?.trim() || "", stderr: result.stderr?.trim() || "" };
+  try {
+    const result = await execFileAsync(executable, args, {
+      timeout: 150_000,
+      windowsHide: true,
+      maxBuffer: 2 * 1024 * 1024,
+    });
+    return { stdout: result.stdout?.trim() || "", stderr: result.stderr?.trim() || "" };
+  } catch (error) {
+    if (windows && action === "start") {
+      const failure = /^AURORA_START_ERROR=(.+)$/m.exec(error.stdout || "");
+      if (failure) throw new Error(JSON.parse(failure[1]).message);
+    }
+    throw error;
+  }
 }
 
 async function verifyActive() {
@@ -288,7 +296,7 @@ async function routeApi(request, response, url) {
   }
   if (request.method === "POST" && url.pathname === "/api/heartbeat") {
     heartbeatLease.heartbeat();
-    return sendJson(response, 200, { ok: true });
+    return sendJson(response, 200, { ok: true, session: await sessionStatus() });
   }
   if (request.method === "GET" && url.pathname === "/api/bootstrap") {
     heartbeatLease.heartbeat();
