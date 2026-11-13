@@ -42,6 +42,8 @@ assert.match(selectorFor("shell-main"), /_MainContentSurface_/);
 assert.match(selectorFor("header-tint"), /data-app-shell-header-edge-scroll/);
 assert.match(selectorFor("composer-chrome"), /data-composer-surface-variant/);
 assert.match(selectorFor("composer-toolbar"), /data-composer-footer-responsive/);
+assert.match(selectorFor("main-content-top-fade"), /\[data-app-shell-main-content-top-fade\] > \[class\*="MainContentTopFade-"\]/,
+  "26.1106 的顶部渐变在带 data 属性的容器的直接子元素上。");
 assert.match(selectorFor("thread-composer-fade"), /from-token-main-surface-primary/,
   "The thread composer fade must keep the legacy Codex selector.");
 assert.match(selectorFor("thread-composer-fade"), /from-surface/,
@@ -52,6 +54,8 @@ assert.match(selectorFor("thread-composer-fade"), /\.from-surface\.via-surface/,
   "The modern selector must require both gradient classes and avoid clearing smaller action fades.");
 assert.match(selectorFor("thread-composer-fade"), /\.pointer-events-none\.sticky\.bottom-0 > \.pointer-events-none\.bg-gradient-to-t\.from-surface/,
   "26.1002 的拆分渐变必须限定为 sticky 底部占位的直接装饰子元素，避免清除操作提示。");
+assert.match(selectorFor("thread-composer-fade"), /\.thread-scroll-container \.pointer-events-none\.sticky\.bottom-0 > \.pointer-events-none\.absolute\.from-surface\[class\*="fade-"\]/,
+  "26.1106 的底部渐变由 CSS Modules 绘制，仍须限定为底部占位的直接装饰子元素。");
 assert.match(selectorFor("thread-composer-fade"), /\[data-thread-scroll-footer="true"\] > \.pointer-events-none\.bg-surface/,
   "26.1002 的独立底板必须透明化，不能覆盖输入框自身表面。");
 
