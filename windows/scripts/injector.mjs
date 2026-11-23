@@ -33,7 +33,7 @@ const stableTestidLiteral = (testid) => {
   }
   return JSON.stringify(`[data-testid="${testid}"]`);
 };
-const SKIN_VERSION = "1.0.4";
+const SKIN_VERSION = "1.0.5";
 const MAX_ART_BYTES = 16 * 1024 * 1024;
 const STRONG_THEME_AUDIT_MS = 30000;
 const LOOPBACK_HOSTS = new Set(["127.0.0.1", "localhost", "[::1]", "::1"]);
@@ -1087,7 +1087,8 @@ export async function verifySession(session, expectedThemeId = null, expectedRev
       (!result.homePresent || (Boolean(result.composer) &&
         result.composer.y >= 0 &&
         result.composer.y + result.composer.height <= result.viewport.height + 1 &&
-        (!result.suggestionsPresent || (result.cards.length >= 2 && result.cards.length <= 4))));
+        // 建议区可以保留空容器；有卡片时继续检查原有数量约束。
+        (result.cards.length === 0 || (result.cards.length >= 2 && result.cards.length <= 4))));
     return result;
   })()`);
 }

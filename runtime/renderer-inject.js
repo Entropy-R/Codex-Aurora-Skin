@@ -54,6 +54,8 @@
   let analysisTimer = null;
   let rootObserver = null;
   let bodyReadyHandler = null;
+  let activePageObserver = null;
+  let observedActivePage = null;
   let styleMode = null;
   let styleNode = null;
   let styleSheet = null;
@@ -681,8 +683,7 @@
     let baseState = "unknown";
     if (selectorHit("settings-panel") || selectorHit("appearance-radio") ||
       stableTestidHit("theme-preview")) baseState = "settings";
-    else if (selectorHit("home-icon") || selectorHit("home-route-css") ||
-      selectorHit("home-route")) baseState = "home";
+    else if (selectorHit("home-route")) baseState = "home";
     else if (selectorHit("shell-main") || queryOne('main, [role="main"]')) baseState = "thread";
     const missingL1 = SELECTOR_CONTRACT.selectors
       .filter((entry) => entry.tier === "L1" && entry.required &&
@@ -703,6 +704,22 @@
   const refreshScope = () => {
     metrics.routePasses += 1;
     refreshSemanticParts();
+    if (activePageObserver) {
+      // 新版可在工作区内替换页面，或保留页面并翻转活动标记。
+      const activePage = semanticParts.get("main")?.closest?.("[data-app-shell-active-page]") ?? null;
+      if (activePage !== observedActivePage) {
+        activePageObserver.disconnect();
+        observedActivePage = activePage;
+        const workspace = activePage?.parentElement;
+        if (workspace?.matches?.("[data-app-shell-workspace]")) {
+          activePageObserver.observe(workspace, { childList: true });
+        }
+        if (activePage) activePageObserver.observe(activePage, {
+          attributes: true,
+          attributeFilter: ["data-app-shell-active-page"],
+        });
+      }
+    }
     const scope = detectScope();
     const root = document.documentElement;
     if (root) {
@@ -742,6 +759,7 @@
       }
     }
     state?.rootObserver?.disconnect();
+    activePageObserver?.disconnect();
     if (bodyReadyHandler && typeof document.removeEventListener === "function") {
       document.removeEventListener("DOMContentLoaded", bodyReadyHandler);
     }
@@ -797,6 +815,7 @@
   };
   if (typeof MutationObserver === "function") {
     rootObserver = new MutationObserver(() => scheduleEnsure({ root: true }));
+    activePageObserver = new MutationObserver(() => scheduleEnsure({ scope: true }));
   }
 
   let mediaQuery = null;

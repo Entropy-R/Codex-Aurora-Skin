@@ -20,7 +20,7 @@ const home = resultFor("home", [
 ]);
 assert.equal(home.pass, true);
 assert.equal(home.exitCode, 0);
-assert.equal(home.tiers.L1.length, 6);
+assert.equal(home.tiers.L1.length, 5);
 assert.equal(home.tiers.L2.find(({ key }) => key === "project-selector").status, "miss(config)");
 
 const brokenHome = resultFor("home", ["shell-main", "left-panel", "header-tint", "home-icon"]);
@@ -40,6 +40,9 @@ const selectorFor = (key) => contract.selectors.find((entry) => entry.key === ke
 assert.match(selectorFor("shell-main"), /data-app-shell-main-surface/);
 assert.match(selectorFor("shell-main"), /_MainContentSurface_/);
 assert.match(selectorFor("header-tint"), /data-app-shell-header-edge-scroll/);
+assert.match(selectorFor("header-tint"), /data-app-shell-titlebar/);
+assert.match(selectorFor("home-route"), /group\/home-composer-layout/);
+assert.match(selectorFor("home-route-css"), /group\/home-composer-layout/);
 assert.match(selectorFor("composer-chrome"), /data-composer-surface-variant/);
 assert.match(selectorFor("composer-toolbar"), /data-composer-footer-responsive/);
 assert.match(selectorFor("thread-composer-fade"), /from-token-main-surface-primary/,
@@ -84,6 +87,11 @@ const pageResultFor = (hits, hiddenHits = []) => {
 const codex26810 = pageResultFor(["shell-main", "left-panel", "header-tint", "composer-chrome"]);
 assert.equal(codex26810.baseState, "thread");
 assert.equal(gradeDoctorResult(contract, codex26810).pass, true);
+
+const modernHome = pageResultFor(["shell-main", "left-panel", "header-tint", "home-route", "home-route-css"]);
+assert.equal(modernHome.baseState, "home");
+assert.equal(gradeDoctorResult(contract, modernHome).pass, true,
+  "新版首页不需要可见的装饰图标即可通过 L1 校验。");
 
 const retainedHome = pageResultFor(
   ["shell-main", "left-panel", "header-tint"], ["home-icon", "home-route", "home-route-css"],

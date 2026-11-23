@@ -106,7 +106,7 @@ export function pageDoctor(selectors, stableTestids = []) {
   let baseState = "unknown";
   if (count("settings-panel") > 0 || count("appearance-radio") > 0 ||
     stableTestidCount("theme-preview") > 0) baseState = "settings";
-  else if (count("home-icon") > 0 || count("home-route") > 0) baseState = "home";
+  else if (count("home-route") > 0) baseState = "home";
   else {
     let genericMain = false;
     try { genericMain = [...document.querySelectorAll('main, [role="main"]')].some(rendered); } catch {}

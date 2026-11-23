@@ -536,7 +536,7 @@ function deriveLabel(data) {
   let base = "state";
   if (hit("overlay-dialog")) base = "dialog";
   else if (hit("overlay-menu") || hit("overlay-popper")) base = "menu";
-  else if (hit("home-icon")) base = "home";
+  else if (hit("home-route")) base = "home";
   else if (hit("markdown")) base = "thread";
   else if (hit("shell-main")) base = "route";
   const scheme = data.appearance?.computedColorScheme || "";
