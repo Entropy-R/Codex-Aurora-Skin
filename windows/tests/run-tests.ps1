@@ -1291,7 +1291,7 @@ try {
     }
   }
   foreach ($forbiddenRendererBehavior in @(
-    'getBoundingClientRect', 'ResizeObserver', 'childList', 'subtree',
+    'getBoundingClientRect', 'ResizeObserver', 'subtree',
     'classList.add', 'classList.remove', 'classList.toggle',
     'syncRouteState', 'samplingNativeShell', '.dream-home-utility'
   )) {

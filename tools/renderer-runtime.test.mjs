@@ -307,8 +307,9 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.ok(activePageObserver, "主题应监听新版 Codex 当前活动页的切换。");
   assert.deepEqual([...activePageObserver.options.attributeFilter], ["data-app-shell-active-page"]);
   const workspace = modern.activePage.parentElement;
-  assert.equal(activePageObserver.observations.get(workspace)?.childList, true,
-    "主题还应监听工作区对活动页面的直接替换。");
+  const childListTargets = modern.observers.flatMap((observer) => [...observer.observations]
+    .filter(([, options]) => options.childList).map(([target]) => target));
+  assert.deepEqual(childListTargets, [workspace], "主题只监听工作区对活动页面的直接替换。");
   modern.setRoute("thread");
   modern.page.retainedHiddenRoutes = true;
   modern.page.activePage = modern.makeElement({ parentElement: workspace });
