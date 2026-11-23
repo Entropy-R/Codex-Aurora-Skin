@@ -27,7 +27,7 @@ function classList(initial) {
   };
 }
 
-function makeFixture({ nativeAppearance = "dark", settings = false, adopted = true } = {}) {
+function makeFixture({ nativeAppearance = "dark", settings = false, adopted = true, modernHome = false } = {}) {
   const attrs = new Map();
   const rootStyle = styleDeclaration();
   const rootClasses = classList([nativeAppearance === "dark" ? "electron-dark" : "electron-light"]);
@@ -61,6 +61,10 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
     };
   };
   const shellMain = makeElement();
+  const workspace = modernHome ? makeElement({ matches: ["[data-app-shell-workspace]"] }) : null;
+  const activePage = modernHome ? makeElement({ parentElement: workspace }) : null;
+  page.activePage = activePage;
+  shellMain.closest = (selector) => selector === "[data-app-shell-active-page]" ? page.activePage : null;
   const hiddenRoute = makeElement({ rendered: false });
   const sidebar = makeElement();
   const header = makeElement();
@@ -112,11 +116,15 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
         return page.shellPresent ? sidebar : null;
       }
       if (selector.includes("app-header-tint") || selector.includes("app-shell-header-edge-scroll") ||
-        selector.includes("_Header_")) {
+        selector.includes("_Header_") || selector.includes("data-app-shell-titlebar")) {
+        if (modernHome && !selector.includes("data-app-shell-titlebar")) return null;
         return page.shellPresent ? header : null;
       }
-      if (selector.includes("[role=\"main\"]") || selector.includes("[data-testid=\"home-icon\"]")) {
+      if (modernHome && selector.includes("group/home-composer-layout")) {
         return page.route === "home" ? makeElement() : null;
+      }
+      if (selector.includes("[role=\"main\"]") || selector.includes("[data-testid=\"home-icon\"]")) {
+        return page.route === "home" && !modernHome ? makeElement() : null;
       }
       if (selector.includes("composer-surface-chrome") ||
         selector.includes("data-composer-surface-variant")) {
@@ -132,7 +140,7 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
       if (selector.includes("group\\/project-selector")) return page.projectSelectors;
       const active = this.queryActiveSelector(selector);
       const candidates = active ? [active] : [];
-      if (page.retainedHiddenRoutes && /main|home-icon|Header_|header-edge-scroll|composer-surface/.test(selector)) {
+      if (page.retainedHiddenRoutes && /main|home-icon|home-composer-layout|Header_|header-edge-scroll|titlebar|composer-surface/.test(selector)) {
         candidates.unshift(hiddenRoute);
       }
       return candidates;
@@ -143,9 +151,18 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
     removeEventListener(type) { listeners.delete(`navigation:${type}`); },
   };
   class MockMutationObserver {
-    constructor(callback) { this.callback = callback; this.options = null; observers.push(this); }
-    observe(target, options) { this.target = target; this.options = options; }
-    disconnect() { this.disconnected = true; }
+    constructor(callback) {
+      this.callback = callback;
+      this.observations = new Map();
+      this.options = null;
+      observers.push(this);
+    }
+    observe(target, options) {
+      this.target = target;
+      this.options = options;
+      this.observations.set(target, options);
+    }
+    disconnect() { this.disconnected = true; this.observations.clear(); }
   }
   class MockSheet {
     replaceSync(text) { this.text = text; }
@@ -219,7 +236,7 @@ function makeFixture({ nativeAppearance = "dark", settings = false, adopted = tr
   };
   return {
     addProject, addSearch, attributeLog, attrs, context, document, flushTimers,
-    composer, composerToolbar, header, intervals, listeners, nodes, observers, page, payloadFor,
+    activePage, composer, composerToolbar, header, intervals, listeners, makeElement, nodes, observers, page, payloadFor,
     revoked, root, shellMain, sidebar,
     rootClasses, rootStyle, setRoute, timers, window,
   };
@@ -271,7 +288,7 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.doesNotMatch(template, /electron-opaque|home-suggestion-list-item/,
     "Runtime payload must not carry retired selector documentation/fossils.");
   assert.doesNotMatch(template, /classList\.(add|remove|toggle)/);
-  assert.doesNotMatch(template, /getBoundingClientRect|ResizeObserver|childList|subtree/);
+  assert.doesNotMatch(template, /getBoundingClientRect|ResizeObserver|subtree/);
   // The new contract intentionally keeps the `data-dream-*` attribute names
   // and `--dream-*` custom properties.  Only the retired DOM marker classes
   // and the measured fossil selector must be absent from the canonical CSS.
@@ -281,6 +298,30 @@ export async function runRendererRuntimeTest(assetRoot) {
     "Runtime CSS must use low-frequency DOM markers instead of relational selectors.");
   assert.match(css, /\[data-dream-route="home"\]/);
   assert.match(css, /\[data-dream-search-band="true"\]/);
+
+  const modern = makeFixture({ modernHome: true });
+  vm.runInNewContext(modern.payloadFor(), modern.context);
+  assert.equal(modern.attrs.get("data-dream-route"), "home", "Codex 26.1117 的首页可不渲染图标和 role=main。");
+  assert.equal(modern.window.__CODEX_AURORA_SKIN_STATE__.scope.level, "L1");
+  const activePageObserver = modern.observers.find((observer) => observer.target === modern.activePage);
+  assert.ok(activePageObserver, "主题应监听新版 Codex 当前活动页的切换。");
+  assert.deepEqual([...activePageObserver.options.attributeFilter], ["data-app-shell-active-page"]);
+  const workspace = modern.activePage.parentElement;
+  const childListTargets = modern.observers.flatMap((observer) => [...observer.observations]
+    .filter(([, options]) => options.childList).map(([target]) => target));
+  assert.deepEqual(childListTargets, [workspace], "主题只监听工作区对活动页面的直接替换。");
+  modern.setRoute("thread");
+  modern.page.retainedHiddenRoutes = true;
+  modern.page.activePage = modern.makeElement({ parentElement: workspace });
+  activePageObserver.callback([]);
+  modern.flushTimers(64);
+  assert.equal(modern.attrs.get("data-dream-route"), "thread", "隐藏的新版首页不得覆盖已有会话。");
+  assert.equal(activePageObserver.observations.has(modern.activePage), false);
+  assert.equal(activePageObserver.observations.has(modern.page.activePage), true);
+  modern.setRoute("home");
+  activePageObserver.callback([]);
+  modern.flushTimers(64);
+  assert.equal(modern.attrs.get("data-dream-route"), "home", "应用页签切换不应等待浏览器导航或巡检。");
   assert.match(css, /\[data-dream-search-input="true"\]/);
   assert.match(css, /\[data-dream-project-host="true"\]/);
   assert.doesNotMatch(css, /flex:\s*0 0 440px|min-height:\s*440px|flex-basis:\s*408px|min-height:\s*408px/,
@@ -290,6 +331,11 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.match(css, /filter:\s*brightness\(var\(--ds-art-brightness\)\)/);
   assert.match(css, /\[data-app-shell-page-surface="true"\][^{]*\{\s*background:\s*transparent\s*!important;/,
     "Codex 26.1002 的全窗口外层底色不得覆盖已配置的主题背景。");
+  assert.match(css, /\[data-dream-art-wide="true"\][^\n]*\[data-dream-route="home"\][^\n]*\[data-app-shell-surface-backing="true"\][^\n]*,\r?\n/);
+  assert.match(css, /\[data-dream-art-wide="true"\][^\n]*\[data-dream-route="thread"\]:is\(\[data-dream-task-mode="ambient"\], \[data-dream-task-mode="banner"\]\)[^\n]*\[data-app-shell-surface-backing="true"\]\)\s*\{\s*background:\s*transparent\s*!important;/,
+    "Codex 26.1117 的装饰底板只在整窗壁纸所在的页面透明化。");
+  assert.match(css, /\[data-dream-art-wide="true"\][^\n]*\[data-dream-route="thread"\][^\n]*\s+\.thread-scroll-container > [^{}\n]*shiftWithTranscript-[^{}\n]*::before,\r?\n[^{]*shiftWithTranscript-[^{}\n]*::after\s*\{\s*background:\s*transparent\s*!important;/,
+    "会话底部的渐变和底板由两个伪元素绘制，整窗壁纸模式需同时透明化。");
   assert.doesNotMatch(css, /body\s*\{[^}]*filter:\s*brightness/s,
     "Background brightness must never filter the native app body and controls.");
   assert.doesNotMatch(css, /body\s*\{[^}]*font-family\s*:/s,

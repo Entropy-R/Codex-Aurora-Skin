@@ -174,10 +174,10 @@ html[data-aurora-skin="active"] body::before {
   content: none;
 }
 
-/* 26.1002 的外层 page-surface 会再叠加原生底色；全窗口图片模式只保留
-   主题自己的压暗层，局部卡片与设置页继续使用各自的底色。 */
-html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="home"] [data-app-shell-page-surface="true"],
-html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="thread"]:is([data-dream-task-mode="ambient"], [data-dream-task-mode="banner"]) [data-app-shell-page-surface="true"] {
+/* 26.1117 将主区底色分到独立的 surface-backing；它和旧版 page-surface
+   一样会遮住整窗壁纸。其他模式继续保留原生底色。 */
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="home"] :is([data-app-shell-page-surface="true"], [data-app-shell-surface-backing="true"]),
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-shell-present="true"][data-dream-route="thread"]:is([data-dream-task-mode="ambient"], [data-dream-task-mode="banner"]) :is([data-app-shell-page-surface="true"], [data-app-shell-surface-backing="true"]) {
   background: transparent !important;
 }
 
@@ -817,6 +817,14 @@ html[data-aurora-skin="active"][data-dream-art-wide="true"] __DREAM_SELECTOR_SHE
    selector 合同只命中底部占位和 footer 的装饰子元素，保留输入框及操作提示。 */
 html[data-aurora-skin="active"][data-dream-art-wide="true"] __DREAM_SELECTOR_SHELL_MAIN__
   __DREAM_SELECTOR_THREAD_COMPOSER_FADE__ {
+  background: transparent !important;
+}
+
+/* 26.1117 的会话底部装饰改由两个伪元素绘制。 */
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-route="thread"]:is([data-dream-task-mode="ambient"], [data-dream-task-mode="banner"])
+  __DREAM_SELECTOR_THREAD_COMPOSER_FOOTER__::before,
+html[data-aurora-skin="active"][data-dream-art-wide="true"][data-dream-route="thread"]:is([data-dream-task-mode="ambient"], [data-dream-task-mode="banner"])
+  __DREAM_SELECTOR_THREAD_COMPOSER_FOOTER__::after {
   background: transparent !important;
 }
 

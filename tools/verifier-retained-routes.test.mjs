@@ -48,4 +48,19 @@ for (const [platform, verify] of [["macOS", verifyMac], ["Windows", verifyWindow
   assert.equal(result.composer.visible, true);
   assert.equal(result.pass, true, `${platform}: 可见对话应通过验证。`);
 }
-console.log("PASS: 两端 verifier 均忽略隐藏路由并选择可见的主表面与输入框。");
+
+const home = {
+  ...visible,
+  querySelector(selector) {
+    return selectorKeys.get(selector) === "home-suggestions" ? { querySelectorAll: () => [] } : null;
+  },
+};
+context.window.__CODEX_AURORA_SKIN_STATE__.scope.baseState = "home";
+const retainedQuery = context.document.querySelectorAll.bind(context.document);
+context.document.querySelectorAll = (selector) =>
+  selectorKeys.get(selector) === "home-route" ? [hidden, home] : retainedQuery(selector);
+const emptySuggestions = await verifyWindows({ evaluate: (expression) => vm.runInNewContext(expression, context) });
+assert.equal(emptySuggestions.homePresent, true);
+assert.equal(emptySuggestions.suggestionsPresent, true);
+assert.equal(emptySuggestions.pass, true, "空的首页建议容器不能让 Windows 校验失败。");
+console.log("PASS: 校验器跳过隐藏路由，Windows 首页允许空的建议容器。");
