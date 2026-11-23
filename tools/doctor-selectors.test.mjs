@@ -57,6 +57,8 @@ assert.match(selectorFor("thread-composer-fade"), /\.pointer-events-none\.sticky
   "26.1002 的拆分渐变必须限定为 sticky 底部占位的直接装饰子元素，避免清除操作提示。");
 assert.match(selectorFor("thread-composer-fade"), /\[data-thread-scroll-footer="true"\] > \.pointer-events-none\.bg-surface/,
   "26.1002 的独立底板必须透明化，不能覆盖输入框自身表面。");
+assert.match(selectorFor("thread-composer-footer"), /^\.thread-scroll-container > \.pointer-events-none\.absolute\.bottom-0\[class\*="footer-"\]\[class\*="shiftWithTranscript-"\]$/,
+  "26.1117 的固定遮罩属于会话滚动区的直接子节点。");
 
 const pageResultFor = (hits, hiddenHits = []) => {
   const hitSet = new Set(hits);

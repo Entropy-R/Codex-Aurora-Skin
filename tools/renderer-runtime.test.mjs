@@ -331,6 +331,11 @@ export async function runRendererRuntimeTest(assetRoot) {
   assert.match(css, /filter:\s*brightness\(var\(--ds-art-brightness\)\)/);
   assert.match(css, /\[data-app-shell-page-surface="true"\][^{]*\{\s*background:\s*transparent\s*!important;/,
     "Codex 26.1002 的全窗口外层底色不得覆盖已配置的主题背景。");
+  assert.match(css, /\[data-dream-art-wide="true"\][^\n]*\[data-dream-route="home"\][^\n]*\[data-app-shell-surface-backing="true"\][^\n]*,\r?\n/);
+  assert.match(css, /\[data-dream-art-wide="true"\][^\n]*\[data-dream-route="thread"\]:is\(\[data-dream-task-mode="ambient"\], \[data-dream-task-mode="banner"\]\)[^\n]*\[data-app-shell-surface-backing="true"\]\)\s*\{\s*background:\s*transparent\s*!important;/,
+    "Codex 26.1117 的装饰底板只在整窗壁纸所在的页面透明化。");
+  assert.match(css, /\[data-dream-art-wide="true"\][^\n]*\[data-dream-route="thread"\][^\n]*\s+\.thread-scroll-container > [^{}\n]*shiftWithTranscript-[^{}\n]*::before,\r?\n[^{]*shiftWithTranscript-[^{}\n]*::after\s*\{\s*background:\s*transparent\s*!important;/,
+    "会话底部的渐变和底板由两个伪元素绘制，整窗壁纸模式需同时透明化。");
   assert.doesNotMatch(css, /body\s*\{[^}]*filter:\s*brightness/s,
     "Background brightness must never filter the native app body and controls.");
   assert.doesNotMatch(css, /body\s*\{[^}]*font-family\s*:/s,
